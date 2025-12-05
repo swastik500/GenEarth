@@ -41,6 +41,10 @@ block content %}
         <option value="en">English</option>
         <option value="hi">हिंदी</option>
         <option value="mr">मराठी</option>
+        <option value="bn">বাংলা</option>
+        <option value="ta">தமிழ்</option>
+        <option value="te">తెలుగు</option>
+        <option value="gu">ગુજરાતી</option>
       </select>
     </div>
   </div>
@@ -88,12 +92,15 @@ block content %}
           placeholder="Type your message..."
           autocomplete="off"
         />
+        <button id="voiceButton" class="send-button" title="Voice input">
+          <span>🎤</span>
+        </button>
         <button id="sendButton" class="send-button">
           <span>Send</span>
           <span class="icon">➤</span>
         </button>
       </div>
-      <div class="input-hint">
+      <div class="input-hint" id="voiceStatus">
         Press Enter to send • Shift+Enter for new line
       </div>
     </div>
