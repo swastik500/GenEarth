@@ -10,6 +10,8 @@ const chatMessages = document.getElementById('chatMessages');
 const languageSelect = document.getElementById('languageSelect');
 const quizStatus = document.getElementById('quizStatus');
 const quizInfo = document.getElementById('quizInfo');
+const voiceButton = document.getElementById('voiceButton');
+const voiceStatus = document.getElementById('voiceStatus');
 
 // Initialize
 function init() {
@@ -33,6 +35,11 @@ function init() {
     sendButton.addEventListener('click', sendMessage);
     messageInput.addEventListener('keydown', handleKeyDown);
     languageSelect.addEventListener('change', handleLanguageChange);
+    // Voice button
+    if (voiceButton) {
+        voiceButton.addEventListener('click', toggleVoiceInput);
+        setupVoiceSupport();
+    }
 }
 
 // Handle keyboard shortcuts
@@ -49,8 +56,104 @@ function handleLanguageChange(e) {
     localStorage.setItem('ecomitra_language', currentLanguage);
     
     // Add system message about language change
-    const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+    const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी', bn: 'বাংলা', ta: 'தமிழ்', te: 'తెలుగు', gu: 'ગુજરાતી' };
     addBotMessage(`Language changed to ${langNames[currentLanguage]}. I'll respond in this language from now on.`);
+}
+
+// Voice input using Web Speech API
+let recognition = null;
+let isRecognizing = false;
+
+function setupVoiceSupport() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        voiceButton.style.display = 'none';
+        return;
+    }
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    updateRecognitionLang();
+
+    recognition.onstart = () => {
+        isRecognizing = true;
+        voiceButton.classList.add('active');
+        setVoiceStatus('Listening…');
+    };
+    recognition.onerror = (e) => {
+        console.error('Voice error:', e);
+        setVoiceStatus('Voice error. Try again.');
+        stopRecognition();
+    };
+    recognition.onend = () => {
+        isRecognizing = false;
+        voiceButton.classList.remove('active');
+        setVoiceStatus('Press mic to speak');
+    };
+    recognition.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            if (result.isFinal) {
+                finalTranscript += result[0].transcript;
+            } else {
+                interimTranscript += result[0].transcript;
+            }
+        }
+        const text = (finalTranscript || interimTranscript).trim();
+        messageInput.value = text;
+        if (finalTranscript && finalTranscript.trim().length > 0) {
+            // Auto-send when final result available
+            sendMessage();
+        }
+    };
+}
+
+function updateRecognitionLang() {
+    if (!recognition) return;
+    const langMap = {
+        en: 'en-IN',
+        hi: 'hi-IN',
+        mr: 'mr-IN',
+        bn: 'bn-IN',
+        ta: 'ta-IN',
+        te: 'te-IN',
+        gu: 'gu-IN'
+    };
+    recognition.lang = langMap[currentLanguage] || 'en-IN';
+}
+
+function toggleVoiceInput() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        setVoiceStatus('Voice not supported in this browser.');
+        return;
+    }
+    if (!recognition) setupVoiceSupport();
+    updateRecognitionLang();
+    if (isRecognizing) {
+        stopRecognition();
+    } else {
+        try {
+            recognition.start();
+        } catch (e) {
+            // Ignore errors if already started
+        }
+    }
+}
+
+function stopRecognition() {
+    if (recognition && isRecognizing) {
+        try { recognition.stop(); } catch (_) {}
+        isRecognizing = false;
+        voiceButton.classList.remove('active');
+    }
+}
+
+function setVoiceStatus(text) {
+    if (voiceStatus) voiceStatus.textContent = `Press Enter to send • ${text}`;
 }
 
 // Send message

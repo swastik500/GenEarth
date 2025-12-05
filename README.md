@@ -57,25 +57,6 @@ Search and filter environmental NGOs by:
 - City
 - Category (Waste Management, Energy, Water Conservation, etc.)
 
-## 🔧 Troubleshooting
-
-### ChromaDB Issues
-
-If you encounter ChromaDB errors, delete the `chroma_db/` folder and reinitialize:
-
-```powershell
-Remove-Item -Recurse -Force chroma_db
-python backend/init_db.py
-```
-
-### API Key Errors
-
-Ensure your `.env` file has a valid `GOOGLE_API_KEY`:
-
-```
-GOOGLE_API_KEY=AIzaSy...
-```
-
 ## 📝 License
 
 MIT License - Built for Hackathon Purpose
