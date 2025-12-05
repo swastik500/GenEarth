@@ -1,0 +1,104 @@
+{% extends "base.html" %} {% block title %}Chat - EcoMitra{% endblock %} {%
+block content %}
+<div class="chat-container">
+  <div class="chat-sidebar">
+    <div class="sidebar-header">
+      <h2>💬 Topics</h2>
+    </div>
+    <div class="topic-chips">
+      <button
+        class="chip"
+        onclick="sendQuickMessage('Tell me about recycling')"
+      >
+        ♻️ Recycling
+      </button>
+      <button class="chip" onclick="sendQuickMessage('How can I save energy?')">
+        ⚡ Energy Saving
+      </button>
+      <button
+        class="chip"
+        onclick="sendQuickMessage('What can I do about pollution?')"
+      >
+        🌫️ Pollution Control
+      </button>
+      <button
+        class="chip"
+        onclick="sendQuickMessage('Show me government schemes')"
+      >
+        🏛️ Govt Schemes
+      </button>
+      <button class="chip" onclick="sendQuickMessage('Find NGOs near me')">
+        🤝 NGOs Near Me
+      </button>
+      <button class="chip" onclick="sendQuickMessage('quiz')">
+        ❓ Quiz Mode
+      </button>
+    </div>
+
+    <div class="language-switch">
+      <label>Language:</label>
+      <select id="languageSelect">
+        <option value="en">English</option>
+        <option value="hi">हिंदी</option>
+        <option value="mr">मराठी</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="chat-main">
+    <div class="chat-header">
+      <div class="chat-header-content">
+        <span class="logo">🌱</span>
+        <div>
+          <h2>EcoMitra</h2>
+          <p class="status">Online • AI Assistant</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot-message">
+        <div class="message-content">
+          <p>
+            👋 Hello! I'm EcoMitra, your AI companion for sustainable living.
+          </p>
+          <p>Ask me anything about:</p>
+          <ul>
+            <li>♻️ Recycling and waste management</li>
+            <li>⚡ Energy conservation tips</li>
+            <li>🌫️ Pollution control</li>
+            <li>🏛️ Government environmental schemes</li>
+            <li>🤝 Environmental NGOs</li>
+            <li>❓ Or take a quiz!</li>
+          </ul>
+          <p>How can I help you today?</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-container">
+      <div class="quiz-status" id="quizStatus" style="display: none">
+        <span id="quizInfo"></span>
+      </div>
+      <div class="chat-input-wrapper">
+        <input
+          type="text"
+          id="messageInput"
+          class="chat-input"
+          placeholder="Type your message..."
+          autocomplete="off"
+        />
+        <button id="sendButton" class="send-button">
+          <span>Send</span>
+          <span class="icon">➤</span>
+        </button>
+      </div>
+      <div class="input-hint">
+        Press Enter to send • Shift+Enter for new line
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/chat.js"></script>
+{% endblock %}

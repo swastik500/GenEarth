@@ -1,0 +1,210 @@
+{% extends "base.html" %} {% block title %}NGO Directory - EcoMitra{% endblock
+%} {% block content %}
+<div class="ngos-container">
+  <div class="container">
+    <div class="page-header">
+      <h1>🤝 Environmental NGO Directory</h1>
+      <p>Find and connect with environmental organizations across India</p>
+    </div>
+
+    <div class="filters-section">
+      <h2>🔍 Filter NGOs</h2>
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label for="stateFilter">State:</label>
+          <select id="stateFilter" class="filter-select">
+            <option value="">All States</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="cityFilter">City:</label>
+          <select id="cityFilter" class="filter-select">
+            <option value="">All Cities</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="categoryFilter">Category:</label>
+          <select id="categoryFilter" class="filter-select">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <button id="applyFilters" class="apply-button">Apply Filters</button>
+          <button id="clearFilters" class="clear-button">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-section">
+      <div class="results-header">
+        <h2>Results</h2>
+        <span id="resultsCount" class="count-badge">Loading...</span>
+      </div>
+      <div id="ngosList" class="ngos-grid">
+        <div class="loading">Loading NGOs...</div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-card">
+        <h3>💡 Need Help Finding an NGO?</h3>
+        <p>You can also ask our AI chatbot to help you find specific NGOs!</p>
+        <a href="/chat" class="help-link">Go to Chat →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allStates = [];
+  let allCities = [];
+  let allCategories = [];
+
+  // Fetch filter options
+  async function loadFilterOptions() {
+    try {
+      const [statesRes, citiesRes, categoriesRes] = await Promise.all([
+        fetch("/api/ngos/states"),
+        fetch("/api/ngos/cities"),
+        fetch("/api/ngos/categories"),
+      ]);
+
+      const statesData = await statesRes.json();
+      const citiesData = await citiesRes.json();
+      const categoriesData = await categoriesRes.json();
+
+      allStates = statesData.states;
+      allCities = citiesData.cities;
+      allCategories = categoriesData.categories;
+
+      populateFilters();
+    } catch (error) {
+      console.error("Error loading filter options:", error);
+    }
+  }
+
+  function populateFilters() {
+    const stateSelect = document.getElementById("stateFilter");
+    const citySelect = document.getElementById("cityFilter");
+    const categorySelect = document.getElementById("categoryFilter");
+
+    // Populate states
+    allStates.forEach((state) => {
+      const option = document.createElement("option");
+      option.value = state;
+      option.textContent = state;
+      stateSelect.appendChild(option);
+    });
+
+    // Populate cities
+    allCities.forEach((city) => {
+      const option = document.createElement("option");
+      option.value = city;
+      option.textContent = city;
+      citySelect.appendChild(option);
+    });
+
+    // Populate categories
+    allCategories.forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      categorySelect.appendChild(option);
+    });
+  }
+
+  // Load NGOs
+  async function loadNGOs(filters = {}) {
+    const ngosList = document.getElementById("ngosList");
+    ngosList.innerHTML = '<div class="loading">Loading...</div>';
+
+    try {
+      const params = new URLSearchParams();
+      if (filters.state) params.append("state", filters.state);
+      if (filters.city) params.append("city", filters.city);
+      if (filters.category) params.append("category", filters.category);
+
+      const response = await fetch(`/api/ngos?${params.toString()}`);
+      const ngos = await response.json();
+
+      document.getElementById(
+        "resultsCount"
+      ).textContent = `${ngos.length} NGOs`;
+
+      if (ngos.length === 0) {
+        ngosList.innerHTML = `
+                <div class="no-results">
+                    <p>😔 No NGOs found matching your filters.</p>
+                    <p>Try adjusting your search criteria.</p>
+                </div>
+            `;
+        return;
+      }
+
+      ngosList.innerHTML = ngos
+        .map(
+          (ngo) => `
+            <div class="ngo-card">
+                <div class="ngo-header">
+                    <h3>🌿 ${ngo.name}</h3>
+                    <span class="category-badge">${ngo.category}</span>
+                </div>
+                <div class="ngo-body">
+                    <p class="ngo-location">📍 ${ngo.city}, ${ngo.state}</p>
+                    ${
+                      ngo.description
+                        ? `<p class="ngo-description">${ngo.description}</p>`
+                        : ""
+                    }
+                    <div class="ngo-contact">
+                        ${
+                          ngo.contact_phone
+                            ? `<div class="contact-item">📞 ${ngo.contact_phone}</div>`
+                            : ""
+                        }
+                        ${
+                          ngo.contact_email
+                            ? `<div class="contact-item">✉️ ${ngo.contact_email}</div>`
+                            : ""
+                        }
+                        ${
+                          ngo.website
+                            ? `<div class="contact-item">🌐 <a href="${ngo.website}" target="_blank">Visit Website</a></div>`
+                            : ""
+                        }
+                    </div>
+                </div>
+            </div>
+        `
+        )
+        .join("");
+    } catch (error) {
+      console.error("Error loading NGOs:", error);
+      ngosList.innerHTML =
+        '<div class="error">Error loading NGOs. Please try again.</div>';
+    }
+  }
+
+  // Apply filters
+  document.getElementById("applyFilters").addEventListener("click", () => {
+    const filters = {
+      state: document.getElementById("stateFilter").value,
+      city: document.getElementById("cityFilter").value,
+      category: document.getElementById("categoryFilter").value,
+    };
+    loadNGOs(filters);
+  });
+
+  // Clear filters
+  document.getElementById("clearFilters").addEventListener("click", () => {
+    document.getElementById("stateFilter").value = "";
+    document.getElementById("cityFilter").value = "";
+    document.getElementById("categoryFilter").value = "";
+    loadNGOs();
+  });
+
+  // Initialize
+  loadFilterOptions();
+  loadNGOs();
+</script>
+{% endblock %}

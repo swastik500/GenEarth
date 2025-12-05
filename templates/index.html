@@ -1,0 +1,153 @@
+{% extends "base.html" %} {% block title %}EcoMitra - AI Chatbot for Sustainable
+Living{% endblock %} {% block content %}
+<div class="hero-section">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        🌱 Welcome to <span class="highlight">EcoMitra</span>
+      </h1>
+      <p class="hero-subtitle">
+        Your AI companion for sustainable living in India
+      </p>
+      <p class="hero-description">
+        Learn about recycling, energy conservation, pollution control,
+        government schemes, and connect with environmental NGOs - all in your
+        language!
+      </p>
+
+      <div class="language-selector">
+        <h3>Choose Your Language / अपनी भाषा चुनें</h3>
+        <div class="language-buttons">
+          <button class="lang-btn active" data-lang="en">🇬🇧 English</button>
+          <button class="lang-btn" data-lang="hi">🇮🇳 हिंदी</button>
+          <button class="lang-btn" data-lang="mr">🇮🇳 मराठी</button>
+        </div>
+      </div>
+
+      <a href="/chat" class="cta-button" id="startChatBtn"> 💬 Start Chat </a>
+
+      <div class="quick-topics">
+        <h3>What can I help you with?</h3>
+        <div class="topic-grid">
+          <div class="topic-card">
+            <span class="topic-icon">♻️</span>
+            <span class="topic-name">Recycling</span>
+          </div>
+          <div class="topic-card">
+            <span class="topic-icon">⚡</span>
+            <span class="topic-name">Energy Saving</span>
+          </div>
+          <div class="topic-card">
+            <span class="topic-icon">🌫️</span>
+            <span class="topic-name">Pollution Control</span>
+          </div>
+          <div class="topic-card">
+            <span class="topic-icon">🏛️</span>
+            <span class="topic-name">Govt Schemes</span>
+          </div>
+          <div class="topic-card">
+            <span class="topic-icon">🤝</span>
+            <span class="topic-name">Find NGOs</span>
+          </div>
+          <div class="topic-card">
+            <span class="topic-icon">❓</span>
+            <span class="topic-name">Take Quiz</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sample-questions">
+        <h3>Try asking:</h3>
+        <div class="questions-list">
+          <button class="question-chip" onclick="goToChatWithQuestion(this)">
+            How do I segregate waste at home?
+          </button>
+          <button class="question-chip" onclick="goToChatWithQuestion(this)">
+            What are the benefits of LED bulbs?
+          </button>
+          <button class="question-chip" onclick="goToChatWithQuestion(this)">
+            Show me solar subsidy schemes
+          </button>
+          <button class="question-chip" onclick="goToChatWithQuestion(this)">
+            Find environmental NGOs in Mumbai
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="features-section">
+      <h2>Why Choose EcoMitra?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🤖</div>
+          <h3>AI-Powered</h3>
+          <p>
+            Advanced AI understands your questions and provides accurate,
+            helpful answers
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Multilingual</h3>
+          <p>
+            Chat in English, Hindi, or Marathi - whichever you're comfortable
+            with
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📚</div>
+          <h3>Comprehensive</h3>
+          <p>
+            Covers recycling, energy, pollution, schemes, and NGO information
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎮</div>
+          <h3>Fun Learning</h3>
+          <p>Take interactive quizzes to test your environmental knowledge</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedLanguage = "en";
+
+  // Language selector
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      document
+        .querySelectorAll(".lang-btn")
+        .forEach((b) => b.classList.remove("active"));
+      this.classList.add("active");
+      selectedLanguage = this.dataset.lang;
+      localStorage.setItem("ecomitra_language", selectedLanguage);
+    });
+  });
+
+  // Load saved language
+  const savedLang = localStorage.getItem("ecomitra_language");
+  if (savedLang) {
+    selectedLanguage = savedLang;
+    document.querySelectorAll(".lang-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.lang === savedLang);
+    });
+  }
+
+  // Start chat with language
+  document
+    .getElementById("startChatBtn")
+    .addEventListener("click", function (e) {
+      e.preventDefault();
+      window.location.href = `/chat?lang=${selectedLanguage}`;
+    });
+
+  // Go to chat with pre-filled question
+  function goToChatWithQuestion(btn) {
+    const question = btn.textContent.trim();
+    localStorage.setItem("ecomitra_prefill_question", question);
+    window.location.href = `/chat?lang=${selectedLanguage}`;
+  }
+</script>
+{% endblock %}

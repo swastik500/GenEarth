@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}EcoMitra{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container">
+        <div class="nav-brand">
+          <span class="logo">🌱</span>
+          <span class="brand-name">EcoMitra</span>
+        </div>
+        <ul class="nav-menu">
+          <li><a href="/">Home</a></li>
+          <li><a href="/chat">Chat</a></li>
+          <li><a href="/ngos">NGOs</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>{% block content %}{% endblock %}</main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>🌍 Made with 💚 for a sustainable future</p>
+        <p>&copy; 2024 EcoMitra - AI for Community Sustainability</p>
+      </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>
