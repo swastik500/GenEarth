@@ -12,6 +12,11 @@ const quizStatus = document.getElementById('quizStatus');
 const quizInfo = document.getElementById('quizInfo');
 const voiceButton = document.getElementById('voiceButton');
 const voiceStatus = document.getElementById('voiceStatus');
+const ttsToggle = document.getElementById('ttsToggle');
+const ttsButton = document.getElementById('ttsButton');
+
+let ttsEnabled = localStorage.getItem('ecomitra_tts') === 'on';
+let availableVoices = [];
 
 // Initialize
 function init() {
@@ -40,6 +45,22 @@ function init() {
         voiceButton.addEventListener('click', toggleVoiceInput);
         setupVoiceSupport();
     }
+    // TTS toggle and button
+    if (ttsToggle) {
+        ttsToggle.checked = ttsEnabled;
+        ttsToggle.addEventListener('change', () => {
+            ttsEnabled = ttsToggle.checked;
+            localStorage.setItem('ecomitra_tts', ttsEnabled ? 'on' : 'off');
+        });
+    }
+    if (ttsButton) {
+        ttsButton.addEventListener('click', () => {
+            ttsEnabled = !ttsEnabled;
+            if (ttsToggle) ttsToggle.checked = ttsEnabled;
+            localStorage.setItem('ecomitra_tts', ttsEnabled ? 'on' : 'off');
+        });
+    }
+    setupTTSVoices();
 }
 
 // Handle keyboard shortcuts
@@ -58,6 +79,7 @@ function handleLanguageChange(e) {
     // Add system message about language change
     const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी', bn: 'বাংলা', ta: 'தமிழ்', te: 'తెలుగు', gu: 'ગુજરાતી' };
     addBotMessage(`Language changed to ${langNames[currentLanguage]}. I'll respond in this language from now on.`);
+    setupTTSVoices();
 }
 
 // Voice input using Web Speech API
@@ -251,9 +273,28 @@ function addBotMessage(text) {
         <div class="message-content">
             ${formattedText}
         </div>
+        <div class="message-actions">
+            <button class="speak-btn" title="Speak this response">🔊 Speak</button>
+        </div>
     `;
     chatMessages.appendChild(messageDiv);
     scrollToBottom();
+
+    // Attach per-message speak handler if supported
+    const speakBtn = messageDiv.querySelector('.speak-btn');
+    if (speakBtn && ('speechSynthesis' in window)) {
+        speakBtn.addEventListener('click', () => {
+            speakText(stripHtml(formattedText));
+        });
+    } else if (speakBtn) {
+        // Hide button if TTS not supported
+        speakBtn.style.display = 'none';
+    }
+
+    // Auto-speak when global toggle is enabled
+    if (ttsEnabled && ('speechSynthesis' in window)) {
+        speakText(stripHtml(formattedText));
+    }
 }
 
 // Format bot message (simple markdown-like formatting)
@@ -347,6 +388,61 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+}
+
+function setupTTSVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const loadVoices = () => {
+        availableVoices = window.speechSynthesis.getVoices();
+    };
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+}
+
+function getVoiceForLanguage(langCode) {
+    if (!availableVoices || availableVoices.length === 0) return null;
+    const prefer = {
+        en: ['en-IN','en-GB','en-US'],
+        hi: ['hi-IN'],
+        mr: ['mr-IN'],
+        bn: ['bn-IN'],
+        ta: ['ta-IN'],
+        te: ['te-IN'],
+        gu: ['gu-IN']
+    }[langCode] || ['en-IN','en-GB','en-US'];
+    for (const pref of prefer) {
+        const match = availableVoices.find(v => v.lang === pref);
+        if (match) return match;
+    }
+    // Fallback same language family
+    const family = langCode.split('-')[0];
+    const any = availableVoices.find(v => v.lang && v.lang.startsWith(family));
+    return any || availableVoices[0];
+}
+
+function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    // Map current language to voice
+    const voice = getVoiceForLanguage(currentLanguage);
+    if (voice) utter.voice = voice;
+    // Adjust rate for clarity
+    utter.rate = 1.0;
+    utter.pitch = 1.0;
+    try {
+        window.speechSynthesis.cancel(); // cancel any ongoing
+        window.speechSynthesis.speak(utter);
+    } catch (e) {
+        console.warn('TTS speak error:', e);
+    }
 }
 
 // Send quick message (from sidebar chips)

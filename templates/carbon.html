@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carbon Footprint Estimator</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <style>
+      .container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 1rem;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+      }
+      .results {
+        margin-top: 1rem;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .items {
+        margin-top: 0.5rem;
+      }
+      .item {
+        padding: 0.5rem;
+        border-bottom: 1px dashed #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Carbon Footprint Estimator</h1>
+      <p>
+        Enter a list of waste items (e.g., "plastic bottle", "paper", "metal
+        can", "banana peel").
+      </p>
+
+      <label for="itemsInput">Items (one per line):</label>
+      <textarea
+        id="itemsInput"
+        placeholder="plastic bottle
+paper
+metal can
+banana peel"
+      ></textarea>
+      <button id="estimateBtn">Estimate CO₂</button>
+
+      <div id="results" class="results" style="display: none"></div>
+    </div>
+
+    <script>
+      async function estimate() {
+        const lines = document
+          .getElementById("itemsInput")
+          .value.split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean);
+        if (lines.length === 0) {
+          alert("Please enter at least one item");
+          return;
+        }
+        const body = { items: lines };
+        const res = await fetch("/api/trash/estimate-carbon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        const results = document.getElementById("results");
+        results.style.display = "block";
+        const cf = data.carbon_footprint || {};
+        const items = (cf.items || [])
+          .map(
+            (it) => `
+        <div class="item">
+          <strong>${it.label}</strong> → ${it.category}<br/>
+          Est. CO₂e: ${it.estimated_co2e_kg} kg<br/>
+          Reduction if recycled: ${it.reduction_if_recycled_kg} kg
+        </div>
+      `
+          )
+          .join("");
+        results.innerHTML = `
+        <h3>Results</h3>
+        <p>Total estimated CO₂e: <strong>${
+          cf.estimated_total_co2e_kg || 0
+        }</strong> kg</p>
+        <p>Potential reduction if recycled/composted: <strong>${
+          cf.potential_reduction_kg || 0
+        }</strong> kg</p>
+        <div class="items">${items}</div>
+        <p style="margin-top:0.5rem;color:#666;">${data.message || ""}</p>
+      `;
+      }
+      document
+        .getElementById("estimateBtn")
+        .addEventListener("click", estimate);
+    </script>
+  </body>
+</html>

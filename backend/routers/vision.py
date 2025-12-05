@@ -12,26 +12,11 @@ from backend.ai.waste_classifier import get_classifier
 from backend.waste_database import get_disposal_info
 from backend.gamification import award_points
 
-# We will use Google Generative AI SDK directly for vision
-try:
-    import google.generativeai as genai
-except Exception:
-    genai = None
+"""
+Waste analysis router removed.
 
-router = APIRouter(prefix="/api/vision", tags=["vision"]) 
-
-# Use Gemini for fallback when local classification is uncertain
-SUPPORTED_MODEL = "gemini-1.5-flash"
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-
-# Enable/disable local classification
-USE_LOCAL_CLASSIFIER = os.environ.get("USE_LOCAL_CLASSIFIER", "true").lower() == "true"
-
-
-def ensure_gemini_configured():
-    if genai is None:
-        raise HTTPException(status_code=500, detail="Gemini SDK not available. Install google-generativeai.")
-    if not GOOGLE_API_KEY:
+This module is intentionally left empty after the feature was deprecated.
+"""
         raise HTTPException(status_code=400, detail="GOOGLE_API_KEY not set in environment.")
     try:
         genai.configure(api_key=GOOGLE_API_KEY)
@@ -43,6 +28,54 @@ def categorize_items(labels: List[str]) -> Dict[str, List[str]]:
     categories = {
         "organic": [],
         "dry_recyclables": [],
+
+    def analyze_with_roboflow(image_bytes: bytes, mime: str) -> Optional[Dict[str, Any]]:
+        """Analyze image using Roboflow inference API if configured.
+
+        Returns a structured result similar to the Gemini/local output or None if not available.
+        """
+        if not ROBOFLOW_API_KEY or not ROBOFLOW_MODEL_ID:
+            return None
+
+        try:
+            # Roboflow requires base64 image or multipart; we'll send as bytes multipart
+            url = f"https://detect.roboflow.com/{ROBOFLOW_MODEL_ID}?api_key={ROBOFLOW_API_KEY}&format=json"
+            files = {"file": ("image", image_bytes, mime)}
+            resp = requests.post(url, files=files, timeout=20)
+            resp.raise_for_status()
+            data = resp.json()
+
+            # Roboflow common response has 'predictions' list with class and confidence
+            preds = data.get("predictions", [])
+            if not preds:
+                return {
+                    "model": f"roboflow:{ROBOFLOW_MODEL_ID}",
+                    "probable_items": [],
+                    "categorized_items": {"unknown": []},
+                    "environmental_guidance": [],
+                    "do_dont": build_guidelines()
+                }
+
+            labels = []
+            for p in preds:
+                label = p.get("class") or p.get("label") or "unknown"
+                conf = p.get("confidence") or p.get("score")
+                if conf is not None:
+                    labels.append(f"{label} ({conf:.2f})")
+                else:
+                    labels.append(label)
+
+            categorized = categorize_items(labels)
+            return {
+                "model": f"roboflow:{ROBOFLOW_MODEL_ID}",
+                "probable_items": labels,
+                "categorized_items": categorized,
+                "environmental_guidance": [],
+                "do_dont": build_guidelines()
+            }
+        except Exception as e:
+            logging.error(f"Roboflow analysis failed: {e}")
+            return None
         "e_waste": [],
         "hazardous": [],
         "unknown": []
