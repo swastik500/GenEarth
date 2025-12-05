@@ -1,5 +1,5 @@
 // Chat functionality
-let sessionId = null;
+let sessionId = localStorage.getItem('ecoSessionId') || null;
 let currentLanguage = 'en';
 let isQuizMode = false;
 
@@ -175,6 +175,9 @@ async function sendMessage() {
     const typingId = addTypingIndicator();
     
     try {
+        // Get username from localStorage
+        const username = localStorage.getItem('ecoUsername');
+        
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {
@@ -183,7 +186,8 @@ async function sendMessage() {
             body: JSON.stringify({
                 message: message,
                 language: currentLanguage,
-                session_id: sessionId
+                session_id: sessionId,
+                username: username
             })
         });
         
@@ -193,8 +197,9 @@ async function sendMessage() {
         
         const data = await response.json();
         
-        // Update session ID
+        // Update session ID and persist in localStorage for memory across page reloads
         sessionId = data.session_id;
+        localStorage.setItem('ecoSessionId', sessionId);
         
         // Remove typing indicator
         removeTypingIndicator(typingId);
@@ -348,6 +353,114 @@ function escapeHtml(text) {
 function sendQuickMessage(message) {
     messageInput.value = message;
     sendMessage();
+}
+
+// Clear chat history and start fresh
+function clearChatHistory() {
+    if (confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
+        // Remove session ID from localStorage
+        localStorage.removeItem('ecoSessionId');
+        sessionId = null;
+        
+        // Clear chat messages UI
+        chatMessages.innerHTML = `
+            <div class="message bot-message">
+                <div class="message-content">
+                    <p>👋 Chat history cleared! Starting fresh conversation.</p>
+                    <p>How can I help you today?</p>
+                </div>
+            </div>
+        `;
+        
+        // Reset quiz mode
+        isQuizMode = false;
+        if (quizStatus) {
+            quizStatus.style.display = 'none';
+        }
+        
+        alert('✅ Chat history cleared successfully!');
+    }
+}
+
+// Toggle history view modal
+function toggleHistoryView() {
+    const modal = document.getElementById('historyModal');
+    if (modal.style.display === 'none' || !modal.style.display) {
+        modal.style.display = 'flex';
+        loadChatHistory();
+    } else {
+        modal.style.display = 'none';
+    }
+}
+
+// Load and display chat history
+async function loadChatHistory() {
+    const historyContent = document.getElementById('historyContent');
+    historyContent.innerHTML = '<div class="loading">Loading chat history...</div>';
+    
+    try {
+        const username = localStorage.getItem('ecoUsername');
+        const url = username 
+            ? `/api/chat/history?username=${encodeURIComponent(username)}`
+            : `/api/chat/history`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to load history');
+        
+        const data = await response.json();
+        
+        if (data.sessions && data.sessions.length > 0) {
+            let html = '';
+            
+            data.sessions.forEach(session => {
+                const date = new Date(session.date);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                
+                html += `
+                    <div class="history-session">
+                        <div class="history-session-header">
+                            <span class="history-session-date">📅 ${dateStr}</span>
+                            <span class="history-session-meta">
+                                ${session.message_count || 0} messages • ${session.language}
+                            </span>
+                        </div>
+                `;
+                
+                if (session.messages && session.messages.length > 0) {
+                    session.messages.forEach(msg => {
+                        const msgClass = msg.sender === 'user' ? 'user' : 'bot';
+                        const sender = msg.sender === 'user' ? '👤 You' : '🤖 EcoMitra';
+                        
+                        html += `
+                            <div class="history-message ${msgClass}">
+                                <div class="history-message-sender">${sender}</div>
+                                <div class="history-message-text">${escapeHtml(msg.message)}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `</div>`;
+            });
+            
+            historyContent.innerHTML = html;
+        } else {
+            historyContent.innerHTML = `
+                <div class="history-empty">
+                    <p>📭 No chat history found</p>
+                    <p style="color: #9ca3af; margin-top: 0.5rem;">Start a conversation to see your history here</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+        historyContent.innerHTML = `
+            <div class="history-empty">
+                <p>❌ Error loading chat history</p>
+                <p style="color: #9ca3af; margin-top: 0.5rem;">Please try again later</p>
+            </div>
+        `;
+    }
 }
 
 // Initialize on page load

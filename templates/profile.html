@@ -1,0 +1,469 @@
+{% extends "base.html" %} {% block title %}EcoMitra - Profile & Gamification{%
+endblock %} {% block extra_css %}
+<style>
+  .profile-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+  }
+
+  .profile-header {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  .profile-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 2rem;
+  }
+
+  .username-input {
+    margin: 1rem 0;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .username-input input {
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    min-width: 250px;
+  }
+
+  .username-input button {
+    padding: 0.75rem 1.5rem;
+    background: #059669;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .username-input button:hover {
+    background: #047857;
+  }
+
+  .ecoscore-display {
+    font-size: 3rem;
+    font-weight: bold;
+    margin: 1rem 0;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .stat-card h3 {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stat-card .value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #10b981;
+  }
+
+  .badges-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+  }
+
+  .badges-section h2 {
+    margin: 0 0 1.5rem 0;
+    color: #1f2937;
+  }
+
+  .badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .badge-card {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: transform 0.2s;
+  }
+
+  .badge-card.earned {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #f59e0b;
+  }
+
+  .badge-card.locked {
+    background: #f3f4f6;
+    opacity: 0.6;
+  }
+
+  .badge-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .badge-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .badge-name {
+    font-weight: 600;
+    margin: 0.5rem 0 0.25rem 0;
+    color: #1f2937;
+  }
+
+  .badge-desc {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .leaderboard-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .leaderboard-section h2 {
+    margin: 0 0 1.5rem 0;
+    color: #1f2937;
+  }
+
+  .leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .leaderboard-table th {
+    background: #f3f4f6;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+
+  .leaderboard-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .leaderboard-table tr:hover {
+    background: #f9fafb;
+  }
+
+  .rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: bold;
+    color: white;
+  }
+
+  .rank-1 {
+    background: #f59e0b;
+  }
+  .rank-2 {
+    background: #9ca3af;
+  }
+  .rank-3 {
+    background: #cd7f32;
+  }
+  .rank-other {
+    background: #10b981;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+  }
+
+  .error {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+
+  .current-user {
+    background: #d1fae5 !important;
+    font-weight: 600;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="profile-container">
+  <div class="profile-header">
+    <h1>🏆 Your EcoMitra Profile</h1>
+    <div class="username-input">
+      <input type="text" id="usernameInput" placeholder="Enter your username" />
+      <button onclick="loadProfile()">Load Profile</button>
+    </div>
+    <div id="profileInfo" style="display: none">
+      <h2 id="displayUsername"></h2>
+      <div class="ecoscore-display"><span id="ecoscore">0</span> EcoScore</div>
+    </div>
+  </div>
+
+  <div id="statsContainer" style="display: none">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Current Streak</h3>
+        <div class="value" id="currentStreak">0</div>
+        <p style="margin: 0.5rem 0 0; color: #6b7280; font-size: 0.875rem">
+          days
+        </p>
+      </div>
+      <div class="stat-card">
+        <h3>Longest Streak</h3>
+        <div class="value" id="longestStreak">0</div>
+        <p style="margin: 0.5rem 0 0; color: #6b7280; font-size: 0.875rem">
+          days
+        </p>
+      </div>
+      <div class="stat-card">
+        <h3>Images Analyzed</h3>
+        <div class="value" id="imagesAnalyzed">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Chat Questions</h3>
+        <div class="value" id="chatQuestions">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>NGOs Viewed</h3>
+        <div class="value" id="ngosViewed">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>Schemes Viewed</h3>
+        <div class="value" id="schemesViewed">0</div>
+      </div>
+    </div>
+
+    <div class="badges-section">
+      <h2>🎖️ Badges</h2>
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+  </div>
+
+  <div class="leaderboard-section">
+    <h2>🏅 Top EcoWarriors</h2>
+    <div id="leaderboardLoading" class="loading">Loading leaderboard...</div>
+    <table
+      class="leaderboard-table"
+      id="leaderboardTable"
+      style="display: none"
+    >
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Username</th>
+          <th>EcoScore</th>
+          <th>Streak</th>
+          <th>Badges</th>
+        </tr>
+      </thead>
+      <tbody id="leaderboardBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const ALL_BADGES = [
+    {
+      id: "waste_warrior",
+      name: "Waste Warrior",
+      icon: "♻️",
+      description: "Analyze 3+ waste images",
+    },
+    {
+      id: "energy_saver",
+      name: "Energy Saver",
+      icon: "⚡",
+      description: "Ask 5+ sustainability questions",
+    },
+    {
+      id: "scheme_explorer",
+      name: "Scheme Explorer",
+      icon: "🏛️",
+      description: "View 3+ government schemes",
+    },
+    {
+      id: "ngo_connector",
+      name: "NGO Connector",
+      icon: "🤝",
+      description: "View 3+ NGO profiles",
+    },
+    {
+      id: "quiz_champ",
+      name: "Quiz Champion",
+      icon: "🎓",
+      description: "Complete the quiz",
+    },
+    {
+      id: "streak_starter",
+      name: "Streak Starter",
+      icon: "🔥",
+      description: "Maintain 3-day streak",
+    },
+  ];
+
+  let currentUsername = localStorage.getItem("ecoUsername") || "";
+
+  if (currentUsername) {
+    document.getElementById("usernameInput").value = currentUsername;
+    loadProfile();
+  }
+
+  async function loadProfile() {
+    const username = document.getElementById("usernameInput").value.trim();
+
+    if (!username) {
+      alert("Please enter a username");
+      return;
+    }
+
+    localStorage.setItem("ecoUsername", username);
+    currentUsername = username;
+
+    try {
+      const response = await fetch(`/api/gamification/profile/${username}`);
+
+      if (!response.ok) {
+        // User doesn't exist yet - create profile by tracking an activity
+        await fetch("/api/gamification/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: username,
+            activity_type: "profile_view",
+            metadata: { initial: true },
+          }),
+        });
+
+        // Retry loading profile
+        const retryResponse = await fetch(
+          `/api/gamification/profile/${username}`
+        );
+        const data = await retryResponse.json();
+        displayProfile(data);
+      } else {
+        const data = await response.json();
+        displayProfile(data);
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+      alert("Error loading profile. Please try again.");
+    }
+
+    loadLeaderboard();
+  }
+
+  function displayProfile(data) {
+    document.getElementById("profileInfo").style.display = "block";
+    document.getElementById("statsContainer").style.display = "block";
+
+    document.getElementById("displayUsername").textContent = data.username;
+    document.getElementById("ecoscore").textContent = data.ecoscore;
+    document.getElementById("currentStreak").textContent = data.current_streak;
+    document.getElementById("longestStreak").textContent = data.longest_streak;
+    document.getElementById("imagesAnalyzed").textContent =
+      data.images_analyzed;
+    document.getElementById("chatQuestions").textContent = data.chat_questions;
+    document.getElementById("ngosViewed").textContent = data.ngos_viewed;
+    document.getElementById("schemesViewed").textContent = data.schemes_viewed;
+
+    // Display badges
+    const badgesGrid = document.getElementById("badgesGrid");
+    badgesGrid.innerHTML = "";
+
+    ALL_BADGES.forEach((badge) => {
+      const earned = data.badges.includes(badge.id);
+      const badgeCard = document.createElement("div");
+      badgeCard.className = `badge-card ${earned ? "earned" : "locked"}`;
+      badgeCard.innerHTML = `
+        <div class="badge-icon">${badge.icon}</div>
+        <div class="badge-name">${badge.name}</div>
+        <div class="badge-desc">${badge.description}</div>
+      `;
+      badgesGrid.appendChild(badgeCard);
+    });
+  }
+
+  async function loadLeaderboard() {
+    try {
+      const response = await fetch("/api/gamification/leaderboard?limit=10");
+      const data = await response.json();
+
+      document.getElementById("leaderboardLoading").style.display = "none";
+      document.getElementById("leaderboardTable").style.display = "table";
+
+      const tbody = document.getElementById("leaderboardBody");
+      tbody.innerHTML = "";
+
+      data.leaderboard.forEach((user, index) => {
+        const rank = index + 1;
+        const rankClass =
+          rank === 1
+            ? "rank-1"
+            : rank === 2
+            ? "rank-2"
+            : rank === 3
+            ? "rank-3"
+            : "rank-other";
+        const isCurrentUser = user.username === currentUsername;
+
+        const row = document.createElement("tr");
+        if (isCurrentUser) row.className = "current-user";
+
+        row.innerHTML = `
+          <td><span class="rank-badge ${rankClass}">${rank}</span></td>
+          <td>${user.username}${isCurrentUser ? " (You)" : ""}</td>
+          <td><strong>${user.ecoscore}</strong></td>
+          <td>🔥 ${user.current_streak} days</td>
+          <td>${user.badge_count} 🎖️</td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (error) {
+      console.error("Error loading leaderboard:", error);
+      document.getElementById("leaderboardLoading").textContent =
+        "Error loading leaderboard";
+    }
+  }
+
+  // Load leaderboard on page load
+  loadLeaderboard();
+</script>
+{% endblock %}
