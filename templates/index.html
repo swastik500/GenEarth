@@ -1,9 +1,16 @@
-{% extends "base.html" %} {% block title %}EcoMitra - Pioneering a Greener
-Tomorrow{% endblock %} {% block extra_css %}
+{% extends "base.html" %} {% block title %}EcoMitra - Your AI-Powered
+Sustainability Companion{% endblock %} {% block extra_css %}
 <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   body {
     background: #0a1810;
     overflow-x: hidden;
+    color: #fff;
   }
 
   /* 3D Earth Canvas */
@@ -14,7 +21,7 @@ Tomorrow{% endblock %} {% block extra_css %}
     width: 100%;
     height: 100%;
     z-index: 0;
-    opacity: 0.3;
+    opacity: 0.25;
   }
 
   /* Hero Section */
@@ -26,346 +33,425 @@ Tomorrow{% endblock %} {% block extra_css %}
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: 4rem 2rem 2rem;
     text-align: center;
   }
 
   .partner-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(
+      135deg,
+      rgba(34, 197, 94, 0.15) 0%,
+      rgba(22, 163, 74, 0.05) 100%
+    );
+    border: 1px solid rgba(34, 197, 94, 0.4);
     border-radius: 50px;
     color: #22c55e;
-    font-size: 0.875rem;
-    margin-bottom: 2rem;
-    animation: fadeInDown 0.8s ease-out;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.8s ease-out, glowPulse 3s infinite;
+    backdrop-filter: blur(10px);
+  }
+
+  @keyframes glowPulse {
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
+    }
   }
 
   .partner-icon {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     background: #22c55e;
     border-radius: 50%;
     animation: pulse 2s infinite;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
   }
 
   @keyframes pulse {
     0%,
     100% {
       opacity: 1;
+      transform: scale(1);
     }
     50% {
-      opacity: 0.5;
+      opacity: 0.6;
+      transform: scale(1.2);
     }
   }
 
   .hero-title {
-    font-size: clamp(2.5rem, 8vw, 5rem);
-    font-weight: 800;
-    color: #ffffff;
+    font-size: clamp(2.8rem, 9vw, 6.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #ffffff 0%, #22c55e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     line-height: 1.1;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
     animation: fadeInUp 1s ease-out;
+    letter-spacing: -0.02em;
   }
 
   .hero-subtitle {
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    color: #a1a1aa;
-    max-width: 600px;
-    margin: 0 auto 3rem;
-    line-height: 1.6;
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    color: #d4d4d8;
+    max-width: 700px;
+    margin: 0 auto 3.5rem;
+    line-height: 1.7;
     animation: fadeInUp 1.2s ease-out;
+    font-weight: 400;
   }
 
   .cta-buttons {
     display: flex;
-    gap: 1rem;
+    gap: 1.25rem;
     justify-content: center;
     flex-wrap: wrap;
     animation: fadeInUp 1.4s ease-out;
+    margin-bottom: 3rem;
   }
 
   .btn-primary {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 2rem;
-    background: #22c55e;
+    gap: 0.75rem;
+    padding: 1.1rem 2.5rem;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: #000;
-    font-weight: 600;
-    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    border-radius: 12px;
     text-decoration: none;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
     cursor: pointer;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+
+  .btn-primary:hover::before {
+    left: 100%;
   }
 
   .btn-primary:hover {
-    background: #16a34a;
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.5);
   }
 
   .btn-secondary {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 2rem;
-    background: transparent;
+    gap: 0.75rem;
+    padding: 1.1rem 2.5rem;
+    background: rgba(26, 26, 26, 0.8);
     color: #fff;
     font-weight: 600;
-    border-radius: 8px;
+    font-size: 1.05rem;
+    border-radius: 12px;
     text-decoration: none;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    backdrop-filter: blur(10px);
   }
 
   .btn-secondary:hover {
     border-color: #22c55e;
     color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+    transform: translateY(-3px);
   }
 
-  /* How It Works Section */
+  /* Features Section */
   .section {
     position: relative;
     z-index: 1;
-    padding: 6rem 2rem;
-    background: rgba(10, 24, 16, 0.8);
+    padding: 7rem 2rem;
+  }
+
+  .section-dark {
+    background: linear-gradient(
+      180deg,
+      rgba(10, 24, 16, 0.95) 0%,
+      rgba(15, 30, 20, 0.85) 100%
+    );
+    backdrop-filter: blur(20px);
   }
 
   .section-title {
-    font-size: clamp(2rem, 5vw, 3rem);
-    font-weight: 700;
-    color: #fff;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 0%, #22c55e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
   }
 
   .section-subtitle {
     text-align: center;
-    color: #a1a1aa;
-    max-width: 600px;
-    margin: 0 auto 4rem;
+    color: #d4d4d8;
+    max-width: 700px;
+    margin: 0 auto 5rem;
+    font-size: 1.2rem;
+    line-height: 1.7;
   }
 
-  .cards-grid {
+  /* Features Grid */
+  .features-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    max-width: 1200px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    max-width: 1400px;
     margin: 0 auto;
   }
 
-  .info-card {
-    background: rgba(26, 26, 26, 0.8);
-    border: 1px solid rgba(39, 39, 42, 0.8);
-    border-radius: 16px;
-    padding: 2rem;
-    transition: all 0.3s;
-  }
-
-  .info-card:hover {
-    transform: translateY(-5px);
-    border-color: #22c55e;
-    box-shadow: 0 20px 40px rgba(34, 197, 94, 0.1);
-  }
-
-  .card-icon {
-    width: 60px;
-    height: 60px;
-    background: rgba(34, 197, 94, 0.1);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.75rem;
-  }
-
-  .card-description {
-    color: #a1a1aa;
-    line-height: 1.6;
-  }
-
-  /* Tips Carousel */
-  .carousel-container {
-    max-width: 1200px;
-    margin: 0 auto;
+  .feature-card {
+    background: rgba(26, 26, 26, 0.85);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 20px;
+    padding: 2.5rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    padding: 0 60px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
   }
 
-  .carousel-track {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    padding: 1rem 0;
-  }
-
-  .carousel-nav {
+  .feature-card::before {
+    content: "";
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(34, 197, 94, 0.2);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    color: #22c55e;
-    z-index: 10;
-  }
-
-  .carousel-nav:hover {
-    background: rgba(34, 197, 94, 0.3);
-    transform: translateY(-50%) scale(1.1);
-  }
-
-  .carousel-nav.prev {
+    top: 0;
     left: 0;
-  }
-
-  .carousel-nav.next {
-    right: 0;
-  }
-
-  .tip-card {
-    background: rgba(26, 26, 26, 0.8);
-    border: 1px solid #22c55e;
-    border-radius: 16px;
-    padding: 2rem;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      rgba(34, 197, 94, 0.05) 0%,
+      transparent 100%
+    );
     opacity: 0;
-    animation: fadeInUp 0.6s ease-out forwards;
+    transition: opacity 0.4s;
   }
 
-  .tip-card:nth-child(1) {
-    animation-delay: 0.1s;
-  }
-  .tip-card:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-  .tip-card:nth-child(3) {
-    animation-delay: 0.3s;
-  }
-  .tip-card:nth-child(4) {
-    animation-delay: 0.4s;
+  .feature-card:hover::before {
+    opacity: 1;
   }
 
-  .tip-icon {
-    width: 50px;
-    height: 50px;
-    background: rgba(34, 197, 94, 0.1);
-    border-radius: 50%;
+  .feature-card:hover {
+    transform: translateY(-8px);
+    border-color: #22c55e;
+    box-shadow: 0 25px 50px rgba(34, 197, 94, 0.15);
+  }
+
+  .feature-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(
+      135deg,
+      rgba(34, 197, 94, 0.2) 0%,
+      rgba(34, 197, 94, 0.05) 100%
+    );
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 2.2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .feature-title {
     font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .tip-title {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: 700;
     color: #fff;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
   }
 
-  .tip-description {
+  .feature-description {
     color: #a1a1aa;
-    line-height: 1.6;
+    line-height: 1.7;
+    font-size: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .feature-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #22c55e;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    text-decoration: none;
+    transition: gap 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+
+  .feature-link:hover {
+    gap: 0.75rem;
   }
 
   /* Stats Section */
+  .stats-section {
+    padding: 5rem 2rem;
+    background: rgba(34, 197, 94, 0.05);
+    border-top: 1px solid rgba(34, 197, 94, 0.2);
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
+    gap: 3rem;
     max-width: 1200px;
     margin: 0 auto;
   }
 
   .stat-card {
-    background: rgba(26, 26, 26, 0.8);
-    border: 1px solid rgba(39, 39, 42, 0.8);
-    border-radius: 16px;
-    padding: 2rem;
     text-align: center;
+    padding: 2rem;
   }
 
   .stat-number {
-    font-size: 3rem;
-    font-weight: 800;
-    color: #22c55e;
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.5rem;
+    line-height: 1;
   }
 
   .stat-label {
-    font-size: 1.125rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
     color: #fff;
     margin-bottom: 0.5rem;
   }
 
   .stat-description {
     color: #a1a1aa;
-    font-size: 0.875rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
   }
 
   /* Language Selector */
   .language-section {
-    margin: 3rem 0;
+    margin: 4rem 0 0;
+    animation: fadeInUp 1.6s ease-out;
+  }
+
+  .language-title {
+    color: #a1a1aa;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
   }
 
   .language-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 1rem;
-    max-width: 800px;
-    margin: 2rem auto 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    max-width: 900px;
+    margin: 0 auto;
+    justify-content: center;
   }
 
   .lang-btn {
-    padding: 0.75rem 1rem;
-    background: rgba(26, 26, 26, 0.8);
-    border: 1px solid rgba(39, 39, 42, 0.8);
-    border-radius: 8px;
-    color: #fff;
+    padding: 0.75rem 1.5rem;
+    background: rgba(26, 26, 26, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    color: #d4d4d8;
     cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.875rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.9rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
   }
 
   .lang-btn:hover {
-    border-color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.5);
     background: rgba(34, 197, 94, 0.1);
+    transform: translateY(-2px);
   }
 
   .lang-btn.active {
-    background: #22c55e;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: #000;
     border-color: #22c55e;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  }
+
+  /* CTA Section */
+  .cta-section {
+    padding: 8rem 2rem;
+    text-align: center;
+    background: linear-gradient(
+      135deg,
+      rgba(34, 197, 94, 0.1) 0%,
+      rgba(22, 163, 74, 0.05) 100%
+    );
+    border-top: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .cta-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .cta-description {
+    font-size: 1.2rem;
+    color: #d4d4d8;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    line-height: 1.7;
   }
 
   /* Animations */
   @keyframes fadeInDown {
     from {
       opacity: 0;
-      transform: translateY(-20px);
+      transform: translateY(-30px);
     }
     to {
       opacity: 1;
@@ -376,7 +462,7 @@ Tomorrow{% endblock %} {% block extra_css %}
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(30px);
     }
     to {
       opacity: 1;
@@ -384,15 +470,58 @@ Tomorrow{% endblock %} {% block extra_css %}
     }
   }
 
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Scroll indicator */
+  .scroll-indicator {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: bounce 2s infinite;
+  }
+
+  @keyframes bounce {
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+      transform: translateY(0) translateX(-50%);
+    }
+    40% {
+      transform: translateY(-10px) translateX(-50%);
+    }
+    60% {
+      transform: translateY(-5px) translateX(-50%);
+    }
+  }
+
+  .scroll-indicator svg {
+    width: 30px;
+    height: 30px;
+    color: rgba(34, 197, 94, 0.7);
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .hero-container {
-      padding: 1rem;
+      padding: 3rem 1.5rem 2rem;
     }
 
     .cta-buttons {
       flex-direction: column;
       width: 100%;
+      max-width: 400px;
+      margin: 0 auto 3rem;
     }
 
     .btn-primary,
@@ -401,8 +530,40 @@ Tomorrow{% endblock %} {% block extra_css %}
       justify-content: center;
     }
 
-    .tip-card {
-      min-width: 280px;
+    .section {
+      padding: 5rem 1.5rem;
+    }
+
+    .stats-section {
+      padding: 4rem 1.5rem;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .language-grid {
+      gap: 0.5rem;
+    }
+
+    .lang-btn {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+    }
+
+    .partner-badge {
+      font-size: 0.85rem;
+      padding: 0.6rem 1.2rem;
     }
   }
 </style>
@@ -414,139 +575,272 @@ Tomorrow{% endblock %} {% block extra_css %}
 <div class="hero-container">
   <div class="partner-badge">
     <span class="partner-icon"></span>
-    <span>🌱 Your Partner in Sustainability</span>
+    <span>🌱 AI-Powered Sustainability Platform</span>
   </div>
 
-  <h1 class="hero-title">Pioneering a Greener<br />Tomorrow</h1>
+  <h1 class="hero-title">Transform Your World<br />One Green Step at a Time</h1>
 
   <p class="hero-subtitle">
-    Guiding you towards a circular economy with actionable insights, community
-    connections, and powerful tools.
+    Join thousands in making sustainability simple with AI-powered insights,
+    real-time impact tracking, and a community committed to protecting our
+    planet.
   </p>
 
   <div class="cta-buttons">
     <a href="/chat" class="btn-primary" id="startChatBtn">
-      Get Started
+      Start Your Journey
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
         <path
           d="M7.5 15L12.5 10L7.5 5"
           stroke="currentColor"
-          stroke-width="2"
+          stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"
         />
       </svg>
     </a>
-    <button
-      class="btn-secondary"
-      onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})"
-    >
-      Learn More
-    </button>
+    <a href="/carbon" class="btn-secondary">
+      Calculate Carbon Footprint
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <circle
+          cx="10"
+          cy="10"
+          r="7"
+          stroke="currentColor"
+          stroke-width="2"
+          fill="none"
+        />
+        <path
+          d="M10 6v4l3 2"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </svg>
+    </a>
   </div>
 
   <!-- Language Selector -->
   <div class="language-section">
+    <p class="language-title">Choose Your Language</p>
     <div class="language-grid">
       <button class="lang-btn active" data-lang="en">English</button>
-      <button class="lang-btn" data-lang="hi">हिंदी</button>
-      <button class="lang-btn" data-lang="mr">मराठी</button>
-      <button class="lang-btn" data-lang="bn">বাংলা</button>
-      <button class="lang-btn" data-lang="ta">தமிழ்</button>
-      <button class="lang-btn" data-lang="te">తెలుగు</button>
-      <button class="lang-btn" data-lang="gu">ગુજરાતી</button>
+      <button class="lang-btn" data-lang="hi">हिंदी (Hindi)</button>
+      <button class="lang-btn" data-lang="mr">मराठी (Marathi)</button>
+      <button class="lang-btn" data-lang="bn">বাংলা (Bengali)</button>
+      <button class="lang-btn" data-lang="ta">தமிழ் (Tamil)</button>
+      <button class="lang-btn" data-lang="te">తెలుగు (Telugu)</button>
+      <button class="lang-btn" data-lang="gu">ગુજરાતી (Gujarati)</button>
+      <button class="lang-btn" data-lang="kn">ಕನ್ನಡ (Kannada)</button>
+      <button class="lang-btn" data-lang="ml">മലയാളം (Malayalam)</button>
+      <button class="lang-btn" data-lang="pa">ਪੰਜਾਬੀ (Punjabi)</button>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M19 14l-7 7m0 0l-7-7m7 7V3"
+      />
+    </svg>
+  </div>
+</div>
+
+<!-- Stats Section -->
+<div class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">10K+</div>
+      <div class="stat-label">Active Users</div>
+      <p class="stat-description">Growing community of eco-warriors</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-number">500K+</div>
+      <div class="stat-label">CO₂ Reduced</div>
+      <p class="stat-description">Kilograms of carbon offset collectively</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-number">22</div>
+      <div class="stat-label">Languages</div>
+      <p class="stat-description">Making sustainability accessible to all</p>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-number">24/7</div>
+      <div class="stat-label">AI Support</div>
+      <p class="stat-description">Instant answers to your eco-questions</p>
     </div>
   </div>
 </div>
 
-<!-- How It Works Section -->
-<div class="section" id="how-it-works">
-  <h2 class="section-title">How EcoMitra Works</h2>
+<!-- Features Section -->
+<div class="section section-dark">
+  <h2 class="section-title">Powerful Tools for Change</h2>
   <p class="section-subtitle">
-    Your journey to a sustainable lifestyle in three simple steps.
+    Everything you need to measure, reduce, and offset your environmental impact
   </p>
 
-  <div class="cards-grid">
-    <div class="info-card">
-      <div class="card-icon">🌍</div>
-      <h3 class="card-title">1. Assess Your Impact</h3>
-      <p class="card-description">
-        Use our intuitive Carbon Estimator to understand your current
-        environmental footprint.
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3 class="feature-title">AI Chatbot Assistant</h3>
+      <p class="feature-description">
+        Get instant, personalized advice on sustainable practices in 22
+        languages. Our AI understands your unique situation and provides
+        actionable recommendations.
       </p>
+      <a href="/chat" class="feature-link">
+        Start Chatting
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M6 12L10 8L6 4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
     </div>
 
-    <div class="info-card">
-      <div class="card-icon">💡</div>
-      <h3 class="card-title">2. Get Guidance</h3>
-      <p class="card-description">
-        Receive personalized tips and connect with our AI chatbot for actionable
-        sustainability advice.
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3 class="feature-title">Carbon Footprint Calculator</h3>
+      <p class="feature-description">
+        Track and estimate your carbon emissions from daily waste. Understand
+        your impact and discover opportunities for reduction with detailed
+        analytics.
       </p>
+      <a href="/carbon" class="feature-link">
+        Calculate Now
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M6 12L10 8L6 4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
     </div>
 
-    <div class="info-card">
-      <div class="card-icon">🤝</div>
-      <h3 class="card-title">3. Connect & Act</h3>
-      <p class="card-description">
-        Join forces with local NGOs, explore the marketplace, and make a
-        collective difference.
+    <div class="feature-card">
+      <div class="feature-icon">📸</div>
+      <h3 class="feature-title">Smart Vision Analysis</h3>
+      <p class="feature-description">
+        Upload images of waste items for instant AI-powered classification and
+        disposal recommendations. Know exactly how to recycle or dispose of any
+        item.
       </p>
+      <a href="/vision" class="feature-link">
+        Try Vision AI
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M6 12L10 8L6 4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🏆</div>
+      <h3 class="feature-title">Gamification & Rewards</h3>
+      <p class="feature-description">
+        Earn EcoPoints, unlock achievements, and climb the leaderboard. Turn
+        sustainable actions into a fun, competitive experience with your
+        community.
+      </p>
+      <a href="/profile" class="feature-link">
+        View Profile
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M6 12L10 8L6 4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">♻️</div>
+      <h3 class="feature-title">Recycling Marketplace</h3>
+      <p class="feature-description">
+        Buy, sell, or exchange recyclable materials. Connect with local
+        collectors and contribute to a circular economy while earning rewards.
+      </p>
+      <a href="/marketplace" class="feature-link">
+        Browse Items
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M6 12L10 8L6 4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon">🤝</div>
+      <h3 class="feature-title">NGO & Government Connect</h3>
+      <p class="feature-description">
+        Discover local environmental organizations and government sustainability
+        programs. Find schemes, grants, and opportunities to maximize your
+        impact.
+      </p>
+      <a href="/ngos" class="feature-link">
+        Explore Resources
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path
+            d="M6 12L10 8L6 4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </a>
     </div>
   </div>
 </div>
 
-<!-- Sustainability Tips Section -->
-<div class="section">
-  <h2 class="section-title">Sustainability Tips & Facts</h2>
-  <p class="section-subtitle">
-    Quick tips and interesting facts to inspire your eco-friendly journey.
+<!-- CTA Section -->
+<div class="cta-section">
+  <h2 class="cta-title">Ready to Make a Difference?</h2>
+  <p class="cta-description">
+    Join our community today and start your journey toward a more sustainable
+    future. Every small action counts.
   </p>
-
-  <div class="carousel-container">
-    <div class="carousel-track">
-      <div class="tip-card">
-        <div class="tip-icon">💡</div>
-        <h3 class="tip-title">Energy Saver Fact</h3>
-        <p class="tip-description">
-          LED bulbs use at least 75% less energy and last 25 times longer than
-          incandescent lighting.
-        </p>
-      </div>
-
-      <div class="tip-card">
-        <div class="tip-icon">♻️</div>
-        <h3 class="tip-title">Compost Your Scraps</h3>
-        <p class="tip-description">
-          Food scraps and yard waste combined make up more than 30% of what we
-          throw away.
-        </p>
-      </div>
-
-      <div class="tip-card">
-        <div class="tip-icon">💧</div>
-        <h3 class="tip-title">Reduce Water Usage</h3>
-        <p class="tip-description">
-          Fix leaky faucets and install water-efficient fixtures to save up to
-          30% on water bills.
-        </p>
-      </div>
-
-      <div class="tip-card">
-        <div class="tip-icon">🌱</div>
-        <h3 class="tip-title">Plant Native Species</h3>
-        <p class="tip-description">
-          Native plants require less water, fertilizer, and pesticides while
-          supporting local wildlife.
-        </p>
-      </div>
-    </div>
+  <div class="cta-buttons">
+    <a href="/chat" class="btn-primary" id="ctaChatBtn">
+      Get Started Free
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path
+          d="M7.5 15L12.5 10L7.5 5"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </a>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+  // ============================================
   // Language Selector
+  // ============================================
   let selectedLanguage = "en";
 
   document.querySelectorAll(".lang-btn").forEach((btn) => {
@@ -560,6 +854,7 @@ Tomorrow{% endblock %} {% block extra_css %}
     });
   });
 
+  // Load saved language preference
   const savedLang = localStorage.getItem("ecomitra_language");
   if (savedLang) {
     selectedLanguage = savedLang;
@@ -568,14 +863,17 @@ Tomorrow{% endblock %} {% block extra_css %}
     });
   }
 
-  document
-    .getElementById("startChatBtn")
-    .addEventListener("click", function (e) {
+  // Update chat links with selected language
+  document.querySelectorAll("#startChatBtn, #ctaChatBtn").forEach((btn) => {
+    btn.addEventListener("click", function (e) {
       e.preventDefault();
       window.location.href = `/chat?lang=${selectedLanguage}`;
     });
+  });
 
-  // 3D Earth
+  // ============================================
+  // 3D Earth Background Animation
+  // ============================================
   const canvas = document.getElementById("earth-canvas");
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(
@@ -591,66 +889,145 @@ Tomorrow{% endblock %} {% block extra_css %}
   });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Create Earth
+  // Create Earth sphere with improved materials
   const geometry = new THREE.SphereGeometry(5, 64, 64);
-
-  // Create a simple gradient material
   const material = new THREE.MeshPhongMaterial({
     color: 0x22c55e,
     emissive: 0x0a4d2e,
-    shininess: 30,
-    wireframe: false,
+    shininess: 50,
+    specular: 0x111111,
+    flatShading: false,
   });
 
   const earth = new THREE.Mesh(geometry, material);
   scene.add(earth);
 
-  // Add wireframe overlay
-  const wireframeGeometry = new THREE.SphereGeometry(5.1, 32, 32);
+  // Add wireframe overlay for depth
+  const wireframeGeometry = new THREE.SphereGeometry(5.15, 32, 32);
   const wireframeMaterial = new THREE.MeshBasicMaterial({
     color: 0x22c55e,
     wireframe: true,
     transparent: true,
-    opacity: 0.1,
+    opacity: 0.15,
   });
   const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
   scene.add(wireframe);
 
-  // Add lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+  // Add particle effect
+  const particlesGeometry = new THREE.BufferGeometry();
+  const particlesCount = 1000;
+  const posArray = new Float32Array(particlesCount * 3);
+
+  for (let i = 0; i < particlesCount * 3; i++) {
+    posArray[i] = (Math.random() - 0.5) * 25;
+  }
+
+  particlesGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(posArray, 3)
+  );
+  const particlesMaterial = new THREE.PointsMaterial({
+    size: 0.02,
+    color: 0x22c55e,
+    transparent: true,
+    opacity: 0.6,
+  });
+
+  const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+  scene.add(particlesMesh);
+
+  // Enhanced lighting setup
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
   scene.add(ambientLight);
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
   directionalLight.position.set(5, 3, 5);
   scene.add(directionalLight);
 
-  const pointLight = new THREE.PointLight(0x22c55e, 0.5);
+  const pointLight = new THREE.PointLight(0x22c55e, 0.6);
   pointLight.position.set(-5, -3, -5);
   scene.add(pointLight);
 
+  const hemisphereLight = new THREE.HemisphereLight(0x22c55e, 0x0a1810, 0.3);
+  scene.add(hemisphereLight);
+
   camera.position.z = 15;
 
-  // Animation
+  // Animation loop
+  let mouseX = 0;
+  let mouseY = 0;
+
+  document.addEventListener("mousemove", (event) => {
+    mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+    mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+  });
+
   function animate() {
     requestAnimationFrame(animate);
 
+    // Rotate earth
     earth.rotation.y += 0.001;
-    earth.rotation.x += 0.0005;
+    earth.rotation.x = mouseY * 0.1;
+    earth.rotation.y += mouseX * 0.0005;
+
+    // Counter-rotate wireframe
     wireframe.rotation.y -= 0.002;
     wireframe.rotation.x -= 0.001;
+
+    // Rotate particles
+    particlesMesh.rotation.y += 0.0005;
 
     renderer.render(scene, camera);
   }
 
   animate();
 
-  // Handle resize
+  // Handle window resize
   window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  });
+
+  // ============================================
+  // Intersection Observer for Scroll Animations
+  // ============================================
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: "0px 0px -100px 0px",
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = "1";
+        entry.target.style.transform = "translateY(0)";
+      }
+    });
+  }, observerOptions);
+
+  // Observe feature cards
+  document.querySelectorAll(".feature-card, .stat-card").forEach((card) => {
+    card.style.opacity = "0";
+    card.style.transform = "translateY(30px)";
+    card.style.transition = "opacity 0.6s ease-out, transform 0.6s ease-out";
+    observer.observe(card);
+  });
+
+  // ============================================
+  // Smooth Scroll
+  // ============================================
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute("href"));
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
   });
 </script>
 {% endblock %}
