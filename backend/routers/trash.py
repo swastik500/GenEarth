@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Body
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Union
+from pydantic import BaseModel
 import base64
 import os
 import requests
@@ -9,6 +10,9 @@ import requests
 from backend.database import get_db
 
 router = APIRouter(prefix="/api/trash", tags=["carbon-footprint"])
+
+class CarbonEstimateRequest(BaseModel):
+    items: List[Union[str, Dict[str, str]]]
 
 def _get_api_key(provided_key: Optional[str] = None) -> str:
     key = provided_key or os.getenv("ROBOFLOW_API_KEY")
@@ -95,19 +99,17 @@ def _estimate_carbon(items: list) -> Dict[str, Any]:
 # Trash detection is intentionally disabled for now; carbon estimator is available as a standalone API.
 
 @router.post("/estimate-carbon")
-async def estimate_carbon(
-    items: Optional[list] = Body(default=None, description="List of item labels or dicts with 'label'"),
-):
+async def estimate_carbon(request: CarbonEstimateRequest):
     """Estimate carbon footprint directly from provided items without detection.
 
     Example body:
     { "items": ["plastic bottle", "paper", {"label": "metal can"}] }
     """
-    if items is None:
+    if not request.items:
         raise HTTPException(status_code=400, detail="Provide 'items' as a list of labels or objects.")
 
     normalized = []
-    for it in items:
+    for it in request.items:
         if isinstance(it, str):
             normalized.append({"label": it})
         elif isinstance(it, dict):

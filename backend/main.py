@@ -9,6 +9,7 @@ from backend.routers import government
 from backend.routers import gamification
 from backend.routers import trash
 from backend.routers import marketplace
+from backend.routers import mobile_api
 from backend.database import init_db
 
 # Initialize FastAPI app
@@ -40,6 +41,7 @@ app.include_router(government.router)
 app.include_router(gamification.router)
 app.include_router(trash.router)
 app.include_router(marketplace.router)
+app.include_router(mobile_api.router)
 
 
 @app.on_event("startup")
