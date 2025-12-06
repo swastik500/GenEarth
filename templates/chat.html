@@ -1,5 +1,88 @@
 {% extends "base.html" %} {% block title %}Chat - EcoMitra{% endblock %} {%
 block content %}
+
+<style>
+  /* Force dark theme for chat page */
+  body {
+    background: #0a1810 !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Override any light theme remnants */
+  .chat-container,
+  .chat-main,
+  .chat-messages {
+    background: #0a1810 !important;
+  }
+
+  .chat-sidebar {
+    background: rgba(26, 26, 26, 0.8) !important;
+  }
+
+  .chat-header {
+    background: rgba(26, 26, 26, 0.8) !important;
+  }
+
+  .chat-input-container {
+    background: rgba(26, 26, 26, 0.8) !important;
+  }
+
+  /* Force dark message bubbles */
+  .bot-message .message-content {
+    background: rgba(26, 26, 26, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #e4e4e7 !important;
+  }
+
+  .user-message .message-content {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    color: #000 !important;
+  }
+
+  /* Force dark input field */
+  .chat-input {
+    background: rgba(26, 26, 26, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #e4e4e7 !important;
+  }
+
+  .chat-input::placeholder {
+    color: #71717a !important;
+  }
+
+  /* Sidebar chips */
+  .chip {
+    background: rgba(34, 197, 94, 0.1) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #e4e4e7 !important;
+  }
+
+  .chip:hover {
+    background: rgba(34, 197, 94, 0.2) !important;
+    border-color: #22c55e !important;
+  }
+
+  /* Language switch and labels */
+  .language-switch label {
+    color: #e4e4e7 !important;
+  }
+
+  .language-switch select {
+    background: rgba(26, 26, 26, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #e4e4e7 !important;
+  }
+
+  /* Sidebar header */
+  .sidebar-header h2 {
+    color: #22c55e !important;
+  }
+</style>
+
 <div class="chat-container">
   <div class="chat-sidebar">
     <div class="sidebar-header">
@@ -39,12 +122,27 @@ block content %}
       <label>Language:</label>
       <select id="languageSelect">
         <option value="en">English</option>
-        <option value="hi">हिंदी</option>
-        <option value="mr">मराठी</option>
-        <option value="bn">বাংলা</option>
-        <option value="ta">தமிழ்</option>
-        <option value="te">తెలుగు</option>
-        <option value="gu">ગુજરાતી</option>
+        <option value="hi">हिंदी (Hindi)</option>
+        <option value="mr">मराठी (Marathi)</option>
+        <option value="bn">বাংলা (Bengali)</option>
+        <option value="ta">தமிழ் (Tamil)</option>
+        <option value="te">తెలుగు (Telugu)</option>
+        <option value="gu">ગુજરાતી (Gujarati)</option>
+        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+        <option value="ml">മലയാളം (Malayalam)</option>
+        <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+        <option value="or">ଓଡ଼ିଆ (Odia)</option>
+        <option value="as">অসমীয়া (Assamese)</option>
+        <option value="ur">اردو (Urdu)</option>
+        <option value="es">Español (Spanish)</option>
+        <option value="fr">Français (French)</option>
+        <option value="de">Deutsch (German)</option>
+        <option value="pt">Português (Portuguese)</option>
+        <option value="zh">中文 (Chinese)</option>
+        <option value="ja">日本語 (Japanese)</option>
+        <option value="ko">한국어 (Korean)</option>
+        <option value="ar">العربية (Arabic)</option>
+        <option value="ru">Русский (Russian)</option>
       </select>
     </div>
 
@@ -53,8 +151,8 @@ block content %}
         <input type="checkbox" id="ttsToggle" />
         Voice Output (Text-to-Speech)
       </label>
-      <p style="font-size: 0.8rem; color: #6b7280; margin: 0.25rem 0 0 0">
-        Supports English, Hindi, Marathi (browser voice availability may vary)
+      <p style="font-size: 0.8rem; color: #a1a1aa; margin: 0.25rem 0 0 0">
+        Supports 20+ languages (browser voice availability may vary)
       </p>
     </div>
 
@@ -62,21 +160,31 @@ block content %}
       <button
         class="chip"
         onclick="toggleHistoryView()"
-        style="background: #3b82f6; color: white; margin-top: 1rem"
+        style="
+          background: rgba(59, 130, 246, 0.2);
+          color: #60a5fa;
+          border-color: rgba(59, 130, 246, 0.4);
+          margin-top: 1rem;
+        "
       >
         📜 View History
       </button>
       <button
         class="chip"
         onclick="clearChatHistory()"
-        style="background: #ef4444; color: white; margin-top: 0.5rem"
+        style="
+          background: rgba(239, 68, 68, 0.2);
+          color: #f87171;
+          border-color: rgba(239, 68, 68, 0.4);
+          margin-top: 0.5rem;
+        "
       >
         🗑️ Clear History
       </button>
       <p
         style="
           font-size: 0.75rem;
-          color: #6b7280;
+          color: #a1a1aa;
           margin-top: 0.5rem;
           text-align: center;
         "
@@ -158,146 +266,179 @@ block content %}
       <div class="loading">Loading chat history...</div>
     </div>
   </div>
+
+  <style>
+    /* Voice button animation */
+    @keyframes pulse-voice {
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+      }
+    }
+
+    #voiceButton.active {
+      animation: pulse-voice 1.5s infinite;
+      background-color: rgba(34, 197, 94, 0.2) !important;
+      color: #22c55e !important;
+    }
+
+    #voiceButton:hover {
+      transform: scale(1.1);
+    }
+
+    #voiceButton {
+      transition: all 0.3s ease;
+    }
+
+    .history-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 24, 16, 0.9);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+    }
+
+    .history-modal-content {
+      background: rgba(26, 26, 26, 0.95);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .history-modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-modal-header h2 {
+      margin: 0;
+      color: #22c55e;
+    }
+
+    .history-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #a1a1aa;
+      padding: 0.5rem;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .history-close:hover {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    .history-modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .history-session {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      background: rgba(26, 26, 26, 0.6);
+      border-radius: 8px;
+      border-left: 4px solid #22c55e;
+    }
+
+    .history-session-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .history-session-date {
+      font-weight: 600;
+      color: #e4e4e7;
+    }
+
+    .history-session-meta {
+      font-size: 0.875rem;
+      color: #a1a1aa;
+    }
+
+    .history-message {
+      margin: 0.75rem 0;
+      padding: 0.75rem;
+      border-radius: 6px;
+    }
+
+    .history-message.user {
+      background: rgba(34, 197, 94, 0.1);
+      border-left: 3px solid #22c55e;
+    }
+
+    .history-message.bot {
+      background: rgba(26, 26, 26, 0.8);
+      border-left: 3px solid #16a34a;
+    }
+
+    .history-message-sender {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+      color: #22c55e;
+    }
+
+    .history-message-text {
+      color: #e4e4e7;
+      line-height: 1.5;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: 3rem;
+      color: #a1a1aa;
+    }
+
+    .history-load-more {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    .history-load-more button {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .history-load-more button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+  </style>
+
+  <script src="/static/js/chat.js"></script>
+  {% endblock %}
 </div>
-
-<style>
-  .history-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .history-modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 800px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  }
-
-  .history-modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .history-modal-header h2 {
-    margin: 0;
-    color: #1f2937;
-  }
-
-  .history-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #6b7280;
-    padding: 0.5rem;
-    border-radius: 4px;
-    transition: background 0.2s;
-  }
-
-  .history-close:hover {
-    background: #f3f4f6;
-  }
-
-  .history-modal-body {
-    padding: 1.5rem;
-    overflow-y: auto;
-    flex: 1;
-  }
-
-  .history-session {
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background: #f9fafb;
-    border-radius: 8px;
-    border-left: 4px solid #10b981;
-  }
-
-  .history-session-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
-  }
-
-  .history-session-date {
-    font-weight: 600;
-    color: #1f2937;
-  }
-
-  .history-session-meta {
-    font-size: 0.875rem;
-    color: #6b7280;
-  }
-
-  .history-message {
-    margin: 0.75rem 0;
-    padding: 0.75rem;
-    border-radius: 6px;
-  }
-
-  .history-message.user {
-    background: white;
-    border-left: 3px solid #3b82f6;
-  }
-
-  .history-message.bot {
-    background: #f0fdf4;
-    border-left: 3px solid #10b981;
-  }
-
-  .history-message-sender {
-    font-weight: 600;
-    font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-    color: #4b5563;
-  }
-
-  .history-message-text {
-    color: #1f2937;
-    line-height: 1.5;
-  }
-
-  .history-empty {
-    text-align: center;
-    padding: 3rem;
-    color: #6b7280;
-  }
-
-  .history-load-more {
-    text-align: center;
-    padding: 1rem;
-  }
-
-  .history-load-more button {
-    padding: 0.75rem 1.5rem;
-    background: #10b981;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-  }
-
-  .history-load-more button:hover {
-    background: #059669;
-  }
-</style>
-
-<script src="/static/js/chat.js"></script>
-{% endblock %}

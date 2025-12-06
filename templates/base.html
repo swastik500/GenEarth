@@ -5,23 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}EcoMitra{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Modern Header Styling */
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(10, 24, 16, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+        transition: all 0.3s ease;
+      }
+
+      .navbar.scrolled {
+        background: rgba(10, 24, 16, 0.95);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .navbar .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 70px;
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+        transition: transform 0.3s ease;
+      }
+
+      .nav-brand:hover {
+        transform: scale(1.05);
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+      }
+
+      .brand-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #22c55e 0%, #86efac 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.5px;
+      }
+
+      .nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .nav-menu li {
+        position: relative;
+      }
+
+      .nav-menu a {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1.25rem;
+        color: #e4e4e7;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nav-menu a::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          rgba(34, 197, 94, 0.1) 0%,
+          rgba(34, 197, 94, 0.05) 100%
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .nav-menu a:hover::before {
+        opacity: 1;
+      }
+
+      .nav-menu a:hover {
+        color: #22c55e;
+        transform: translateY(-2px);
+      }
+
+      .nav-menu a.active {
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+
+      /* Mobile Menu Toggle */
+      .mobile-menu-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: #e4e4e7;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+
+      .mobile-menu-toggle:hover {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+      }
+
+      /* Main content padding for fixed navbar */
+      main {
+        padding-top: 70px;
+      }
+
+      /* Footer styling */
+      .footer {
+        background: rgba(10, 24, 16, 0.95);
+        border-top: 1px solid rgba(34, 197, 94, 0.15);
+        padding: 2rem 0;
+        text-align: center;
+        color: #a1a1aa;
+      }
+
+      .footer .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .footer p {
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .mobile-menu-toggle {
+          display: block;
+        }
+
+        .nav-menu {
+          position: fixed;
+          top: 70px;
+          left: 0;
+          right: 0;
+          background: rgba(10, 24, 16, 0.98);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          flex-direction: column;
+          gap: 0;
+          padding: 1rem 0;
+          border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+          transform: translateY(-100%);
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .nav-menu.active {
+          transform: translateY(0);
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .nav-menu li {
+          width: 100%;
+        }
+
+        .nav-menu a {
+          width: 100%;
+          padding: 1rem 2rem;
+          border-radius: 0;
+        }
+
+        .navbar .container {
+          padding: 0 1rem;
+        }
+      }
+    </style>
     {% block extra_css %}{% endblock %}
   </head>
   <body>
-    <nav class="navbar">
+    <nav class="navbar" id="navbar">
       <div class="container">
-        <div class="nav-brand">
+        <a href="/" class="nav-brand">
           <span class="logo">🌱</span>
           <span class="brand-name">EcoMitra</span>
-        </div>
-        <ul class="nav-menu">
-          <li><a href="/">Home</a></li>
-          <li><a href="/chat">Chat</a></li>
-          <li><a href="/ngos">NGOs</a></li>
-          <li><a href="/government">Government</a></li>
-          <li><a href="/carbon">Carbon Estimator</a></li>
-          <li><a href="/marketplace">Marketplace</a></li>
-          <li><a href="/profile">🏆 Profile</a></li>
+        </a>
+
+        <button
+          class="mobile-menu-toggle"
+          id="mobileMenuToggle"
+          aria-label="Toggle menu"
+        >
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+
+        <ul class="nav-menu" id="navMenu">
+          <li><a href="/" class="nav-link">Home</a></li>
+          <li><a href="/chat" class="nav-link">💬 Chat</a></li>
+          <li><a href="/ngos" class="nav-link">🤝 NGOs</a></li>
+          <li><a href="/government" class="nav-link">🏛️ Government</a></li>
+          <li><a href="/carbon" class="nav-link">🌍 Carbon</a></li>
+          <li><a href="/marketplace" class="nav-link">🛒 Marketplace</a></li>
+          <li><a href="/profile" class="nav-link">🏆 Profile</a></li>
         </ul>
       </div>
     </nav>
@@ -35,6 +259,50 @@
       </div>
     </footer>
 
+    <script>
+      // Navbar scroll effect
+      const navbar = document.getElementById("navbar");
+      window.addEventListener("scroll", () => {
+        if (window.scrollY > 50) {
+          navbar.classList.add("scrolled");
+        } else {
+          navbar.classList.remove("scrolled");
+        }
+      });
+
+      // Mobile menu toggle
+      const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+      const navMenu = document.getElementById("navMenu");
+
+      mobileMenuToggle.addEventListener("click", () => {
+        navMenu.classList.toggle("active");
+        const icon = mobileMenuToggle.querySelector(
+          ".material-symbols-outlined"
+        );
+        icon.textContent = navMenu.classList.contains("active")
+          ? "close"
+          : "menu";
+      });
+
+      // Close mobile menu when clicking a link
+      document.querySelectorAll(".nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          navMenu.classList.remove("active");
+          const icon = mobileMenuToggle.querySelector(
+            ".material-symbols-outlined"
+          );
+          icon.textContent = "menu";
+        });
+      });
+
+      // Set active link based on current page
+      const currentPath = window.location.pathname;
+      document.querySelectorAll(".nav-link").forEach((link) => {
+        if (link.getAttribute("href") === currentPath) {
+          link.classList.add("active");
+        }
+      });
+    </script>
     {% block extra_js %}{% endblock %}
   </body>
 </html>

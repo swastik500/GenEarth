@@ -1,103 +1,300 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Carbon Footprint Estimator</title>
-    <link rel="stylesheet" href="/static/css/styles.css" />
-    <style>
-      .container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 1rem;
-      }
-      textarea {
-        width: 100%;
-        min-height: 120px;
-      }
-      .results {
-        margin-top: 1rem;
-        padding: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-      }
-      .items {
-        margin-top: 0.5rem;
-      }
-      .item {
-        padding: 0.5rem;
-        border-bottom: 1px dashed #ddd;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Carbon Footprint Estimator</h1>
-      <p>
-        Enter a list of waste items (e.g., "plastic bottle", "paper", "metal
-        can", "banana peel").
-      </p>
+{% extends "base.html" %} {% block title %}Carbon Footprint Estimator -
+EcoMitra{% endblock %} {% block content %}
 
-      <label for="itemsInput">Items (one per line):</label>
-      <textarea
-        id="itemsInput"
-        placeholder="plastic bottle
+<!-- 3D Earth Background Canvas -->
+<canvas
+  id="earthCanvas"
+  style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.3;
+  "
+></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // 3D Earth Background
+  const canvas = document.getElementById("earthCanvas");
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  // Create Earth sphere
+  const geometry = new THREE.SphereGeometry(5, 32, 32);
+  const material = new THREE.MeshPhongMaterial({
+    color: 0x22c55e,
+    wireframe: false,
+    transparent: true,
+    opacity: 0.3,
+  });
+  const earth = new THREE.Mesh(geometry, material);
+  scene.add(earth);
+
+  // Add wireframe overlay
+  const wireframeGeometry = new THREE.SphereGeometry(5.1, 16, 16);
+  const wireframeMaterial = new THREE.MeshBasicMaterial({
+    color: 0x16a34a,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.2,
+  });
+  const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+  scene.add(wireframe);
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(5, 3, 5);
+  scene.add(directionalLight);
+
+  camera.position.z = 15;
+
+  // Animation
+  function animate() {
+    requestAnimationFrame(animate);
+    earth.rotation.y += 0.002;
+    wireframe.rotation.y += 0.001;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Handle resize
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+
+<style>
+  body {
+    background: #0a1810 !important;
+  }
+
+  .carbon-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #22c55e 0%, #86efac 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .page-header p {
+    color: #a1a1aa;
+    font-size: 1.1rem;
+  }
+
+  .input-section {
+    background: rgba(26, 26, 26, 0.8);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    margin-bottom: 2rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #e4e4e7;
+    font-size: 1.1rem;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 1rem;
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #e4e4e7;
+    font-family: inherit;
+    resize: vertical;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: #22c55e;
+  }
+
+  textarea::placeholder {
+    color: #71717a;
+  }
+
+  .estimate-button {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s;
+  }
+
+  .estimate-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  }
+
+  .results {
+    padding: 2rem;
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .results h3 {
+    color: #22c55e;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+
+  .results > p {
+    color: #e4e4e7;
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+
+  .results strong {
+    color: #22c55e;
+  }
+
+  .items {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .item {
+    padding: 1rem;
+    background: rgba(26, 26, 26, 0.6);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 8px;
+    color: #e4e4e7;
+  }
+
+  .item strong {
+    color: #22c55e;
+    font-size: 1.1rem;
+  }
+
+  .results > p:last-child {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(34, 197, 94, 0.2);
+    color: #a1a1aa;
+    font-style: italic;
+  }
+</style>
+
+<div class="carbon-container">
+  <div class="page-header">
+    <h1>🌍 Carbon Footprint Estimator</h1>
+    <p>
+      Enter a list of waste items to calculate their carbon footprint and
+      discover potential CO₂ reductions through recycling.
+    </p>
+  </div>
+
+  <div class="input-section">
+    <label for="itemsInput">Items (one per line):</label>
+    <textarea
+      id="itemsInput"
+      placeholder="plastic bottle
 paper
 metal can
 banana peel"
-      ></textarea>
-      <button id="estimateBtn">Estimate CO₂</button>
+    ></textarea>
+    <button id="estimateBtn" class="estimate-button">
+      Estimate CO₂ Footprint
+    </button>
+  </div>
 
-      <div id="results" class="results" style="display: none"></div>
-    </div>
+  <div id="results" class="results" style="display: none"></div>
+</div>
 
-    <script>
-      async function estimate() {
-        const lines = document
-          .getElementById("itemsInput")
-          .value.split("\n")
-          .map((l) => l.trim())
-          .filter(Boolean);
-        if (lines.length === 0) {
-          alert("Please enter at least one item");
-          return;
-        }
-        const body = { items: lines };
-        const res = await fetch("/api/trash/estimate-carbon", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        const results = document.getElementById("results");
-        results.style.display = "block";
-        const cf = data.carbon_footprint || {};
-        const items = (cf.items || [])
-          .map(
-            (it) => `
-        <div class="item">
-          <strong>${it.label}</strong> → ${it.category}<br/>
-          Est. CO₂e: ${it.estimated_co2e_kg} kg<br/>
-          Reduction if recycled: ${it.reduction_if_recycled_kg} kg
-        </div>
-      `
-          )
-          .join("");
-        results.innerHTML = `
-        <h3>Results</h3>
-        <p>Total estimated CO₂e: <strong>${
-          cf.estimated_total_co2e_kg || 0
-        }</strong> kg</p>
-        <p>Potential reduction if recycled/composted: <strong>${
-          cf.potential_reduction_kg || 0
-        }</strong> kg</p>
-        <div class="items">${items}</div>
-        <p style="margin-top:0.5rem;color:#666;">${data.message || ""}</p>
-      `;
-      }
-      document
-        .getElementById("estimateBtn")
-        .addEventListener("click", estimate);
-    </script>
-  </body>
-</html>
+<script>
+  async function estimate() {
+    const lines = document
+      .getElementById("itemsInput")
+      .value.split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (lines.length === 0) {
+      alert("Please enter at least one item");
+      return;
+    }
+    const body = { items: lines };
+    const res = await fetch("/api/trash/estimate-carbon", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    const results = document.getElementById("results");
+    results.style.display = "block";
+    const cf = data.carbon_footprint || {};
+    const items = (cf.items || [])
+      .map(
+        (it) => `
+      <div class="item">
+        <strong>${it.label}</strong> → ${it.category}<br/>
+        Est. CO₂e: ${it.estimated_co2e_kg} kg<br/>
+        Reduction if recycled: ${it.reduction_if_recycled_kg} kg
+      </div>
+    `
+      )
+      .join("");
+    results.innerHTML = `
+      <h3>Results</h3>
+      <p>Total estimated CO₂e: <strong>${
+        cf.estimated_total_co2e_kg || 0
+      }</strong> kg</p>
+      <p>Potential reduction if recycled/composted: <strong>${
+        cf.potential_reduction_kg || 0
+      }</strong> kg</p>
+      <div class="items">${items}</div>
+      <p style="margin-top:0.5rem;color:#a1a1aa;">${data.message || ""}</p>
+    `;
+  }
+  document.getElementById("estimateBtn").addEventListener("click", estimate);
+</script>
+
+{% endblock %}

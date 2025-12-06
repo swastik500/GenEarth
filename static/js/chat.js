@@ -77,9 +77,19 @@ function handleLanguageChange(e) {
     localStorage.setItem('ecomitra_language', currentLanguage);
     
     // Add system message about language change
-    const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी', bn: 'বাংলা', ta: 'தமிழ்', te: 'తెలుగు', gu: 'ગુજરાતી' };
+    const langNames = { 
+        en: 'English', hi: 'हिंदी', mr: 'मराठी', bn: 'বাংলা', ta: 'தமிழ்', 
+        te: 'తెలుగు', gu: 'ગુજરાતી', kn: 'ಕನ್ನಡ', ml: 'മലയാളം', pa: 'ਪੰਜਾਬੀ',
+        or: 'ଓଡ଼ିଆ', as: 'অসমীয়া', ur: 'اردو', es: 'Español', fr: 'Français',
+        de: 'Deutsch', pt: 'Português', zh: '中文', ja: '日本語', ar: 'العربية'
+    };
     addBotMessage(`Language changed to ${langNames[currentLanguage]}. I'll respond in this language from now on.`);
     setupTTSVoices();
+    
+    // Update voice recognition language if active
+    if (recognition) {
+        updateRecognitionLang();
+    }
 }
 
 // Voice input using Web Speech API
@@ -89,93 +99,191 @@ let isRecognizing = false;
 function setupVoiceSupport() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        voiceButton.style.display = 'none';
+        console.log('Speech recognition not supported');
+        if (voiceButton) voiceButton.style.display = 'none';
         return;
     }
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-    updateRecognitionLang();
+    
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        updateRecognitionLang();
 
-    recognition.onstart = () => {
-        isRecognizing = true;
-        voiceButton.classList.add('active');
-        setVoiceStatus('Listening…');
-    };
-    recognition.onerror = (e) => {
-        console.error('Voice error:', e);
-        setVoiceStatus('Voice error. Try again.');
-        stopRecognition();
-    };
-    recognition.onend = () => {
-        isRecognizing = false;
-        voiceButton.classList.remove('active');
-        setVoiceStatus('Press mic to speak');
-    };
-    recognition.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const result = event.results[i];
-            if (result.isFinal) {
-                finalTranscript += result[0].transcript;
-            } else {
-                interimTranscript += result[0].transcript;
+        recognition.onstart = () => {
+            console.log('Recognition started');
+            isRecognizing = true;
+            voiceButton.classList.add('active');
+            voiceButton.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+            setVoiceStatus('Listening... Speak now');
+        };
+        
+        recognition.onerror = (e) => {
+            console.error('Voice error:', e.error);
+            isRecognizing = false;
+            voiceButton.classList.remove('active');
+            voiceButton.style.backgroundColor = '';
+            
+            let errorMsg = 'Voice error. Try again.';
+            switch(e.error) {
+                case 'no-speech':
+                    errorMsg = 'No speech detected. Try again.';
+                    break;
+                case 'audio-capture':
+                    errorMsg = 'No microphone found. Check permissions.';
+                    break;
+                case 'not-allowed':
+                    errorMsg = 'Microphone access denied. Enable in settings.';
+                    break;
+                case 'network':
+                    errorMsg = 'Network error. Check connection.';
+                    break;
             }
-        }
-        const text = (finalTranscript || interimTranscript).trim();
-        messageInput.value = text;
-        if (finalTranscript && finalTranscript.trim().length > 0) {
-            // Auto-send when final result available
-            sendMessage();
-        }
-    };
+            setVoiceStatus(errorMsg);
+        };
+        
+        recognition.onend = () => {
+            console.log('Recognition ended');
+            isRecognizing = false;
+            voiceButton.classList.remove('active');
+            voiceButton.style.backgroundColor = '';
+            setVoiceStatus('Press mic to speak');
+        };
+        
+        recognition.onresult = (event) => {
+            console.log('Recognition result received');
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i];
+                if (result.isFinal) {
+                    finalTranscript += result[0].transcript;
+                } else {
+                    interimTranscript += result[0].transcript;
+                }
+            }
+            
+            const text = (finalTranscript || interimTranscript).trim();
+            console.log('Recognized text:', text);
+            
+            if (text) {
+                messageInput.value = text;
+                messageInput.dispatchEvent(new Event('input'));
+            }
+            
+            if (finalTranscript && finalTranscript.trim().length > 0) {
+                console.log('Auto-sending message');
+                setVoiceStatus('Sending message...');
+                setTimeout(() => sendMessage(), 500);
+            }
+        };
+        
+        console.log('Voice recognition setup complete');
+    } catch (error) {
+        console.error('Error setting up voice recognition:', error);
+        if (voiceButton) voiceButton.style.display = 'none';
+    }
 }
 
 function updateRecognitionLang() {
     if (!recognition) return;
     const langMap = {
-        en: 'en-IN',
+        en: 'en-US',
         hi: 'hi-IN',
         mr: 'mr-IN',
         bn: 'bn-IN',
         ta: 'ta-IN',
         te: 'te-IN',
-        gu: 'gu-IN'
+        gu: 'gu-IN',
+        kn: 'kn-IN',
+        ml: 'ml-IN',
+        pa: 'pa-IN',
+        or: 'or-IN',
+        as: 'as-IN',
+        ur: 'ur-IN',
+        es: 'es-ES',
+        fr: 'fr-FR',
+        de: 'de-DE',
+        pt: 'pt-PT',
+        zh: 'zh-CN',
+        ja: 'ja-JP',
+        ar: 'ar-SA'
     };
-    recognition.lang = langMap[currentLanguage] || 'en-IN';
+    recognition.lang = langMap[currentLanguage] || 'en-US';
+    console.log('Recognition language set to:', recognition.lang);
 }
 
 function toggleVoiceInput() {
+    console.log('Toggle voice input clicked');
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
     if (!SpeechRecognition) {
         setVoiceStatus('Voice not supported in this browser.');
+        alert('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.');
         return;
     }
-    if (!recognition) setupVoiceSupport();
+    
+    if (!recognition) {
+        console.log('Setting up voice support...');
+        setupVoiceSupport();
+    }
+    
+    if (!recognition) {
+        setVoiceStatus('Voice setup failed.');
+        return;
+    }
+    
     updateRecognitionLang();
+    
     if (isRecognizing) {
+        console.log('Stopping recognition');
         stopRecognition();
     } else {
+        console.log('Starting recognition');
         try {
             recognition.start();
+            setVoiceStatus('Starting microphone...');
         } catch (e) {
-            // Ignore errors if already started
+            console.error('Error starting recognition:', e);
+            if (e.name === 'InvalidStateError') {
+                // Already started, stop and restart
+                stopRecognition();
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                    } catch (err) {
+                        console.error('Restart failed:', err);
+                        setVoiceStatus('Error starting microphone.');
+                    }
+                }, 100);
+            } else {
+                setVoiceStatus('Error starting microphone.');
+            }
         }
     }
 }
 
 function stopRecognition() {
     if (recognition && isRecognizing) {
-        try { recognition.stop(); } catch (_) {}
+        try { 
+            recognition.stop(); 
+            console.log('Recognition stopped');
+        } catch (e) {
+            console.error('Error stopping recognition:', e);
+        }
         isRecognizing = false;
         voiceButton.classList.remove('active');
+        voiceButton.style.backgroundColor = '';
     }
 }
 
 function setVoiceStatus(text) {
-    if (voiceStatus) voiceStatus.textContent = `Press Enter to send • ${text}`;
+    if (voiceStatus) {
+        voiceStatus.textContent = text;
+        console.log('Voice status:', text);
+    }
 }
 
 // Send message

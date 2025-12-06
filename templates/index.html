@@ -1,124 +1,554 @@
-{% extends "base.html" %} {% block title %}EcoMitra - AI Chatbot for Sustainable
-Living{% endblock %} {% block content %}
-<div class="hero-section">
-  <div class="container">
-    <div class="hero-content">
-      <h1 class="hero-title">
-        🌱 Welcome to <span class="highlight">EcoMitra</span>
-      </h1>
-      <p class="hero-subtitle">
-        Your AI companion for sustainable living in India
+{% extends "base.html" %} {% block title %}EcoMitra - Pioneering a Greener
+Tomorrow{% endblock %} {% block extra_css %}
+<style>
+  body {
+    background: #0a1810;
+    overflow-x: hidden;
+  }
+
+  /* 3D Earth Canvas */
+  #earth-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.3;
+  }
+
+  /* Hero Section */
+  .hero-container {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .partner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 50px;
+    color: #22c55e;
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+    animation: fadeInDown 0.8s ease-out;
+  }
+
+  .partner-icon {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    animation: fadeInUp 1s ease-out;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: #a1a1aa;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    line-height: 1.6;
+    animation: fadeInUp 1.2s ease-out;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeInUp 1.4s ease-out;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: #22c55e;
+    color: #000;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: transparent;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 8px;
+    text-decoration: none;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover {
+    border-color: #22c55e;
+    color: #22c55e;
+  }
+
+  /* How It Works Section */
+  .section {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 2rem;
+    background: rgba(10, 24, 16, 0.8);
+  }
+
+  .section-title {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .section-subtitle {
+    text-align: center;
+    color: #a1a1aa;
+    max-width: 600px;
+    margin: 0 auto 4rem;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .info-card {
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid rgba(39, 39, 42, 0.8);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s;
+  }
+
+  .info-card:hover {
+    transform: translateY(-5px);
+    border-color: #22c55e;
+    box-shadow: 0 20px 40px rgba(34, 197, 94, 0.1);
+  }
+
+  .card-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-description {
+    color: #a1a1aa;
+    line-height: 1.6;
+  }
+
+  /* Tips Carousel */
+  .carousel-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    padding: 0 60px;
+  }
+
+  .carousel-track {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0;
+  }
+
+  .carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #22c55e;
+    z-index: 10;
+  }
+
+  .carousel-nav:hover {
+    background: rgba(34, 197, 94, 0.3);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .carousel-nav.prev {
+    left: 0;
+  }
+
+  .carousel-nav.next {
+    right: 0;
+  }
+
+  .tip-card {
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid #22c55e;
+    border-radius: 16px;
+    padding: 2rem;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .tip-card:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+  .tip-card:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .tip-card:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  .tip-card:nth-child(4) {
+    animation-delay: 0.4s;
+  }
+
+  .tip-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .tip-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.75rem;
+  }
+
+  .tip-description {
+    color: #a1a1aa;
+    line-height: 1.6;
+  }
+
+  /* Stats Section */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .stat-card {
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid rgba(39, 39, 42, 0.8);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #22c55e;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-description {
+    color: #a1a1aa;
+    font-size: 0.875rem;
+  }
+
+  /* Language Selector */
+  .language-section {
+    margin: 3rem 0;
+  }
+
+  .language-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    max-width: 800px;
+    margin: 2rem auto 0;
+  }
+
+  .lang-btn {
+    padding: 0.75rem 1rem;
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid rgba(39, 39, 42, 0.8);
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.875rem;
+  }
+
+  .lang-btn:hover {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+  }
+
+  .lang-btn.active {
+    background: #22c55e;
+    color: #000;
+    border-color: #22c55e;
+  }
+
+  /* Animations */
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .hero-container {
+      padding: 1rem;
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .tip-card {
+      min-width: 280px;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<!-- 3D Earth Background -->
+<canvas id="earth-canvas"></canvas>
+
+<!-- Hero Section -->
+<div class="hero-container">
+  <div class="partner-badge">
+    <span class="partner-icon"></span>
+    <span>🌱 Your Partner in Sustainability</span>
+  </div>
+
+  <h1 class="hero-title">Pioneering a Greener<br />Tomorrow</h1>
+
+  <p class="hero-subtitle">
+    Guiding you towards a circular economy with actionable insights, community
+    connections, and powerful tools.
+  </p>
+
+  <div class="cta-buttons">
+    <a href="/chat" class="btn-primary" id="startChatBtn">
+      Get Started
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path
+          d="M7.5 15L12.5 10L7.5 5"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </a>
+    <button
+      class="btn-secondary"
+      onclick="document.getElementById('how-it-works').scrollIntoView({behavior: 'smooth'})"
+    >
+      Learn More
+    </button>
+  </div>
+
+  <!-- Language Selector -->
+  <div class="language-section">
+    <div class="language-grid">
+      <button class="lang-btn active" data-lang="en">English</button>
+      <button class="lang-btn" data-lang="hi">हिंदी</button>
+      <button class="lang-btn" data-lang="mr">मराठी</button>
+      <button class="lang-btn" data-lang="bn">বাংলা</button>
+      <button class="lang-btn" data-lang="ta">தமிழ்</button>
+      <button class="lang-btn" data-lang="te">తెలుగు</button>
+      <button class="lang-btn" data-lang="gu">ગુજરાતી</button>
+    </div>
+  </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="section" id="how-it-works">
+  <h2 class="section-title">How EcoMitra Works</h2>
+  <p class="section-subtitle">
+    Your journey to a sustainable lifestyle in three simple steps.
+  </p>
+
+  <div class="cards-grid">
+    <div class="info-card">
+      <div class="card-icon">🌍</div>
+      <h3 class="card-title">1. Assess Your Impact</h3>
+      <p class="card-description">
+        Use our intuitive Carbon Estimator to understand your current
+        environmental footprint.
       </p>
-      <p class="hero-description">
-        Learn about recycling, energy conservation, pollution control,
-        government schemes, and connect with environmental NGOs - all in your
-        language!
-      </p>
-
-      <div class="language-selector">
-        <h3>Choose Your Language / अपनी भाषा चुनें</h3>
-        <div class="language-buttons">
-          <button class="lang-btn active" data-lang="en">🇬🇧 English</button>
-          <button class="lang-btn" data-lang="hi">🇮🇳 हिंदी</button>
-          <button class="lang-btn" data-lang="mr">🇮🇳 मराठी</button>
-          <button class="lang-btn" data-lang="bn">🇮🇳 বাংলা</button>
-          <button class="lang-btn" data-lang="ta">🇮🇳 தமிழ்</button>
-          <button class="lang-btn" data-lang="te">🇮🇳 తెలుగు</button>
-          <button class="lang-btn" data-lang="gu">🇮🇳 ગુજરાતી</button>
-        </div>
-      </div>
-
-      <a href="/chat" class="cta-button" id="startChatBtn"> 💬 Start Chat </a>
-
-      <div class="quick-topics">
-        <h3>What can I help you with?</h3>
-        <div class="topic-grid">
-          <div class="topic-card">
-            <span class="topic-icon">♻️</span>
-            <span class="topic-name">Recycling</span>
-          </div>
-          <div class="topic-card">
-            <span class="topic-icon">⚡</span>
-            <span class="topic-name">Energy Saving</span>
-          </div>
-          <div class="topic-card">
-            <span class="topic-icon">🌫️</span>
-            <span class="topic-name">Pollution Control</span>
-          </div>
-          <div class="topic-card">
-            <span class="topic-icon">🏛️</span>
-            <span class="topic-name">Govt Schemes</span>
-          </div>
-          <div class="topic-card">
-            <span class="topic-icon">🤝</span>
-            <span class="topic-name">Find NGOs</span>
-          </div>
-          <div class="topic-card">
-            <span class="topic-icon">❓</span>
-            <span class="topic-name">Take Quiz</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="sample-questions">
-        <h3>Try asking:</h3>
-        <div class="questions-list">
-          <button class="question-chip" onclick="goToChatWithQuestion(this)">
-            How do I segregate waste at home?
-          </button>
-          <button class="question-chip" onclick="goToChatWithQuestion(this)">
-            What are the benefits of LED bulbs?
-          </button>
-          <button class="question-chip" onclick="goToChatWithQuestion(this)">
-            Show me solar subsidy schemes
-          </button>
-          <button class="question-chip" onclick="goToChatWithQuestion(this)">
-            Find environmental NGOs in Mumbai
-          </button>
-        </div>
-      </div>
     </div>
 
-    <div class="features-section">
-      <h2>Why Choose EcoMitra?</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🤖</div>
-          <h3>AI-Powered</h3>
-          <p>
-            Advanced AI understands your questions and provides accurate,
-            helpful answers
-          </p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🌐</div>
-          <h3>Multilingual</h3>
-          <p>
-            Chat in English, Hindi, or Marathi - whichever you're comfortable
-            with
-          </p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📚</div>
-          <h3>Comprehensive</h3>
-          <p>
-            Covers recycling, energy, pollution, schemes, and NGO information
-          </p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🎮</div>
-          <h3>Fun Learning</h3>
-          <p>Take interactive quizzes to test your environmental knowledge</p>
-        </div>
+    <div class="info-card">
+      <div class="card-icon">💡</div>
+      <h3 class="card-title">2. Get Guidance</h3>
+      <p class="card-description">
+        Receive personalized tips and connect with our AI chatbot for actionable
+        sustainability advice.
+      </p>
+    </div>
+
+    <div class="info-card">
+      <div class="card-icon">🤝</div>
+      <h3 class="card-title">3. Connect & Act</h3>
+      <p class="card-description">
+        Join forces with local NGOs, explore the marketplace, and make a
+        collective difference.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Sustainability Tips Section -->
+<div class="section">
+  <h2 class="section-title">Sustainability Tips & Facts</h2>
+  <p class="section-subtitle">
+    Quick tips and interesting facts to inspire your eco-friendly journey.
+  </p>
+
+  <div class="carousel-container">
+    <div class="carousel-track">
+      <div class="tip-card">
+        <div class="tip-icon">💡</div>
+        <h3 class="tip-title">Energy Saver Fact</h3>
+        <p class="tip-description">
+          LED bulbs use at least 75% less energy and last 25 times longer than
+          incandescent lighting.
+        </p>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon">♻️</div>
+        <h3 class="tip-title">Compost Your Scraps</h3>
+        <p class="tip-description">
+          Food scraps and yard waste combined make up more than 30% of what we
+          throw away.
+        </p>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon">💧</div>
+        <h3 class="tip-title">Reduce Water Usage</h3>
+        <p class="tip-description">
+          Fix leaky faucets and install water-efficient fixtures to save up to
+          30% on water bills.
+        </p>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-icon">🌱</div>
+        <h3 class="tip-title">Plant Native Species</h3>
+        <p class="tip-description">
+          Native plants require less water, fertilizer, and pesticides while
+          supporting local wildlife.
+        </p>
       </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+  // Language Selector
   let selectedLanguage = "en";
 
-  // Language selector
   document.querySelectorAll(".lang-btn").forEach((btn) => {
     btn.addEventListener("click", function () {
       document
@@ -130,7 +560,6 @@ Living{% endblock %} {% block content %}
     });
   });
 
-  // Load saved language
   const savedLang = localStorage.getItem("ecomitra_language");
   if (savedLang) {
     selectedLanguage = savedLang;
@@ -139,7 +568,6 @@ Living{% endblock %} {% block content %}
     });
   }
 
-  // Start chat with language
   document
     .getElementById("startChatBtn")
     .addEventListener("click", function (e) {
@@ -147,11 +575,82 @@ Living{% endblock %} {% block content %}
       window.location.href = `/chat?lang=${selectedLanguage}`;
     });
 
-  // Go to chat with pre-filled question
-  function goToChatWithQuestion(btn) {
-    const question = btn.textContent.trim();
-    localStorage.setItem("ecomitra_prefill_question", question);
-    window.location.href = `/chat?lang=${selectedLanguage}`;
+  // 3D Earth
+  const canvas = document.getElementById("earth-canvas");
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    alpha: true,
+    antialias: true,
+  });
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(window.devicePixelRatio);
+
+  // Create Earth
+  const geometry = new THREE.SphereGeometry(5, 64, 64);
+
+  // Create a simple gradient material
+  const material = new THREE.MeshPhongMaterial({
+    color: 0x22c55e,
+    emissive: 0x0a4d2e,
+    shininess: 30,
+    wireframe: false,
+  });
+
+  const earth = new THREE.Mesh(geometry, material);
+  scene.add(earth);
+
+  // Add wireframe overlay
+  const wireframeGeometry = new THREE.SphereGeometry(5.1, 32, 32);
+  const wireframeMaterial = new THREE.MeshBasicMaterial({
+    color: 0x22c55e,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.1,
+  });
+  const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+  scene.add(wireframe);
+
+  // Add lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(5, 3, 5);
+  scene.add(directionalLight);
+
+  const pointLight = new THREE.PointLight(0x22c55e, 0.5);
+  pointLight.position.set(-5, -3, -5);
+  scene.add(pointLight);
+
+  camera.position.z = 15;
+
+  // Animation
+  function animate() {
+    requestAnimationFrame(animate);
+
+    earth.rotation.y += 0.001;
+    earth.rotation.x += 0.0005;
+    wireframe.rotation.y -= 0.002;
+    wireframe.rotation.x -= 0.001;
+
+    renderer.render(scene, camera);
   }
+
+  animate();
+
+  // Handle resize
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
 </script>
 {% endblock %}
