@@ -15,7 +15,7 @@ if not GOOGLE_API_KEY:
 def get_gemini_llm(temperature=0.7):
     """Initialize Gemini LLM for chat"""
     return ChatGoogleGenerativeAI(
-        model="gemini-2.5-pro",
+        model="gemini-2.5-flash",
         google_api_key=GOOGLE_API_KEY,
         temperature=temperature,
         convert_system_message_to_human=True

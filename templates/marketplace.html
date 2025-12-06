@@ -1,0 +1,507 @@
+{% extends "base.html" %} {% block title %}Marketplace - EcoMitra{% endblock %}
+{% block content %}
+
+<!-- 3D Earth Background Canvas -->
+<canvas
+  id="earthCanvas"
+  style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.3;
+  "
+></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // 3D Earth Background
+  const canvas = document.getElementById("earthCanvas");
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  // Create Earth sphere
+  const geometry = new THREE.SphereGeometry(5, 32, 32);
+  const material = new THREE.MeshPhongMaterial({
+    color: 0x22c55e,
+    wireframe: false,
+    transparent: true,
+    opacity: 0.3,
+  });
+  const earth = new THREE.Mesh(geometry, material);
+  scene.add(earth);
+
+  // Add wireframe overlay
+  const wireframeGeometry = new THREE.SphereGeometry(5.1, 16, 16);
+  const wireframeMaterial = new THREE.MeshBasicMaterial({
+    color: 0x16a34a,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.2,
+  });
+  const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+  scene.add(wireframe);
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(5, 3, 5);
+  scene.add(directionalLight);
+
+  camera.position.z = 15;
+
+  // Animation
+  function animate() {
+    requestAnimationFrame(animate);
+    earth.rotation.y += 0.002;
+    wireframe.rotation.y += 0.001;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Handle resize
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+
+<style>
+  body {
+    background: #0a1810 !important;
+  }
+
+  .marketplace-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #22c55e 0%, #86efac 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .page-header p {
+    color: #a1a1aa;
+    font-size: 1.1rem;
+  }
+
+  .marketplace-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+  }
+
+  .marketplace-section {
+    background: rgba(26, 26, 26, 0.8);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    height: fit-content;
+  }
+  .marketplace-section h2 {
+    color: #22c55e;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  input[type="text"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: #e4e4e7;
+    font-family: inherit;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: none;
+    border-color: #22c55e;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #71717a;
+  }
+
+  select option {
+    background: #1a1a1a;
+    color: #e4e4e7;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+    margin-top: 1rem;
+  }
+
+  button[type="submit"],
+  .submit-button {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s;
+  }
+
+  button[type="submit"]:hover,
+  .submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+    flex-wrap: wrap;
+  }
+
+  .section-icon {
+    font-size: 2rem;
+  }
+
+  .section-header h2 {
+    margin: 0;
+    color: #22c55e;
+    font-size: 1.8rem;
+  }
+
+  .filter-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .filter-controls select {
+    width: auto;
+    padding: 0.5rem 1rem;
+  }
+
+  .voice-search-btn {
+    padding: 0.5rem 1rem;
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+
+  .voice-search-btn:hover {
+    background: rgba(34, 197, 94, 0.3);
+    border-color: #22c55e;
+  }
+
+  .items-list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .item-card {
+    padding: 1.5rem;
+    background: rgba(26, 26, 26, 0.6);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 8px;
+    transition: all 0.3s;
+  }
+
+  .item-card:hover {
+    border-color: #22c55e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+  }
+
+  .item-title {
+    color: #22c55e;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .item-category {
+    color: #a1a1aa;
+    font-size: 0.9rem;
+    margin-left: 0.5rem;
+  }
+
+  .item-description {
+    color: #e4e4e7;
+    margin: 0.75rem 0;
+    line-height: 1.5;
+  }
+
+  .item-contact {
+    color: #a1a1aa;
+    font-size: 0.9rem;
+  }
+
+  .no-items {
+    color: #a1a1aa;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .marketplace-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .filter-controls {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .filter-controls select,
+    .voice-search-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div class="marketplace-container">
+  <div class="page-header">
+    <h1>♻️ Marketplace for Recycled Items</h1>
+    <p>
+      Give away cardboard, scrap, clothing, electronics — connect with
+      recyclers. Build a circular economy together!
+    </p>
+  </div>
+
+  <div class="marketplace-grid">
+    <!-- List an Item Section -->
+    <section class="marketplace-section">
+      <div class="section-header">
+        <span class="section-icon">📝</span>
+        <h2>List an Item</h2>
+      </div>
+      <form id="postForm">
+        <div class="form-grid">
+          <input
+            type="text"
+            id="title"
+            placeholder="Item title (e.g., Cardboard sheets)"
+            required
+          />
+          <select id="category" required>
+            <option value="cardboard">Cardboard</option>
+            <option value="scrap">Scrap</option>
+            <option value="clothing">Clothing</option>
+            <option value="electronics">Electronics</option>
+            <option value="plastic">Plastic</option>
+            <option value="paper">Paper</option>
+            <option value="metal">Metal</option>
+            <option value="glass">Glass</option>
+          </select>
+        </div>
+        <textarea id="description" placeholder="Description..."></textarea>
+        <input type="text" id="contact" placeholder="Contact info (optional)" />
+        <button type="submit">Submit Item</button>
+      </form>
+    </section>
+
+    <!-- Browse Items Section -->
+    <section class="marketplace-section">
+      <div class="section-header">
+        <span class="section-icon">🔍</span>
+        <h2>Browse Items</h2>
+      </div>
+      <div class="filter-controls">
+        <select id="filterCategory">
+          <option value="">All Categories</option>
+          <option value="cardboard">Cardboard</option>
+          <option value="scrap">Scrap</option>
+          <option value="clothing">Clothing</option>
+          <option value="electronics">Electronics</option>
+          <option value="plastic">Plastic</option>
+          <option value="paper">Paper</option>
+          <option value="metal">Metal</option>
+          <option value="glass">Glass</option>
+        </select>
+        <button
+          id="voiceSearchBtn"
+          class="voice-search-btn"
+          title="Voice search"
+        >
+          🎤 Voice Search
+        </button>
+      </div>
+      <div id="itemsList" class="items-list"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+    async function loadItems(category = "") {
+      const url = category
+        ? `/api/marketplace/items?category=${encodeURIComponent(category)}`
+        : "/api/marketplace/items";
+      const res = await fetch(url);
+      const items = await res.json();
+      const container = document.getElementById("itemsList");
+      if (!items || items.length === 0) {
+        container.innerHTML =
+          '<div class="no-items">No items yet. Be the first to list something!</div>';
+        return;
+      }
+      container.innerHTML = items
+        .map(
+          (i) => `
+      <div class="item-card">
+        <div>
+          <span class="item-title">${escapeHtml(i.title)}</span>
+          <span class="item-category">(${escapeHtml(i.category)})</span>
+        </div>
+        <div class="item-description">${escapeHtml(
+          i.description || "No description provided"
+        )}</div>
+        <div class="item-contact">Contact: ${escapeHtml(
+          i.contact || "N/A"
+        )}</div>
+      </div>
+    `
+        )
+        .join("");
+    }
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    document
+      .getElementById("postForm")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("title").value.trim();
+        const category = document.getElementById("category").value;
+        const description = document.getElementById("description").value.trim();
+        const contact = document.getElementById("contact").value.trim();
+        const res = await fetch("/api/marketplace/items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, category, description, contact }),
+        });
+        if (!res.ok) {
+          alert("Failed to submit item");
+          return;
+        }
+        document.getElementById("postForm").reset();
+        const filterCategory = document.getElementById("filterCategory").value;
+        loadItems(filterCategory);
+      });
+    document
+      .getElementById("filterCategory")
+      .addEventListener("change", (e) => {
+        loadItems(e.target.value);
+      });
+
+    // Voice search using Web Speech API
+    let recognition;
+    function setupVoiceSearch() {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-IN";
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        // Very simple intent: if includes 'sell' or 'give away', prefill form
+        const t = transcript.toLowerCase();
+        if (t.includes("sell") || t.includes("give away")) {
+          document.getElementById("title").value = "Old item";
+          document.getElementById("description").value = transcript;
+        }
+        // Try to detect categories by keywords
+        const catMap = {
+          cardboard: ["cardboard", "box"],
+          scrap: ["scrap", "metal", "iron"],
+          clothing: ["clothes", "clothing", "shirt", "jeans"],
+          electronics: ["laptop", "phone", "electronics", "charger"],
+        };
+        for (const [cat, kws] of Object.entries(catMap)) {
+          if (kws.some((k) => t.includes(k))) {
+            document.getElementById("category").value = cat;
+            break;
+          }
+        }
+      };
+    }
+    document.getElementById("voiceSearchBtn").addEventListener("click", () => {
+      if (!recognition) setupVoiceSearch();
+      if (recognition) {
+        try {
+          recognition.start();
+        } catch (e) {}
+      } else {
+        alert("Voice search not supported in this browser.");
+      }
+    });
+
+    // Initial load
+    loadItems();
+  </script>
+  {% endblock %}
+</div>

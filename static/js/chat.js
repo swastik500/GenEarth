@@ -1,5 +1,5 @@
 // Chat functionality
-let sessionId = null;
+let sessionId = localStorage.getItem('ecoSessionId') || null;
 let currentLanguage = 'en';
 let isQuizMode = false;
 
@@ -12,6 +12,11 @@ const quizStatus = document.getElementById('quizStatus');
 const quizInfo = document.getElementById('quizInfo');
 const voiceButton = document.getElementById('voiceButton');
 const voiceStatus = document.getElementById('voiceStatus');
+const ttsToggle = document.getElementById('ttsToggle');
+const ttsButton = document.getElementById('ttsButton');
+
+let ttsEnabled = localStorage.getItem('ecomitra_tts') === 'on';
+let availableVoices = [];
 
 // Initialize
 function init() {
@@ -40,6 +45,22 @@ function init() {
         voiceButton.addEventListener('click', toggleVoiceInput);
         setupVoiceSupport();
     }
+    // TTS toggle and button
+    if (ttsToggle) {
+        ttsToggle.checked = ttsEnabled;
+        ttsToggle.addEventListener('change', () => {
+            ttsEnabled = ttsToggle.checked;
+            localStorage.setItem('ecomitra_tts', ttsEnabled ? 'on' : 'off');
+        });
+    }
+    if (ttsButton) {
+        ttsButton.addEventListener('click', () => {
+            ttsEnabled = !ttsEnabled;
+            if (ttsToggle) ttsToggle.checked = ttsEnabled;
+            localStorage.setItem('ecomitra_tts', ttsEnabled ? 'on' : 'off');
+        });
+    }
+    setupTTSVoices();
 }
 
 // Handle keyboard shortcuts
@@ -56,8 +77,19 @@ function handleLanguageChange(e) {
     localStorage.setItem('ecomitra_language', currentLanguage);
     
     // Add system message about language change
-    const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी', bn: 'বাংলা', ta: 'தமிழ்', te: 'తెలుగు', gu: 'ગુજરાતી' };
+    const langNames = { 
+        en: 'English', hi: 'हिंदी', mr: 'मराठी', bn: 'বাংলা', ta: 'தமிழ்', 
+        te: 'తెలుగు', gu: 'ગુજરાતી', kn: 'ಕನ್ನಡ', ml: 'മലയാളം', pa: 'ਪੰਜਾਬੀ',
+        or: 'ଓଡ଼ିଆ', as: 'অসমীয়া', ur: 'اردو', es: 'Español', fr: 'Français',
+        de: 'Deutsch', pt: 'Português', zh: '中文', ja: '日本語', ar: 'العربية'
+    };
     addBotMessage(`Language changed to ${langNames[currentLanguage]}. I'll respond in this language from now on.`);
+    setupTTSVoices();
+    
+    // Update voice recognition language if active
+    if (recognition) {
+        updateRecognitionLang();
+    }
 }
 
 // Voice input using Web Speech API
@@ -67,93 +99,191 @@ let isRecognizing = false;
 function setupVoiceSupport() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        voiceButton.style.display = 'none';
+        console.log('Speech recognition not supported');
+        if (voiceButton) voiceButton.style.display = 'none';
         return;
     }
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-    updateRecognitionLang();
+    
+    try {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        updateRecognitionLang();
 
-    recognition.onstart = () => {
-        isRecognizing = true;
-        voiceButton.classList.add('active');
-        setVoiceStatus('Listening…');
-    };
-    recognition.onerror = (e) => {
-        console.error('Voice error:', e);
-        setVoiceStatus('Voice error. Try again.');
-        stopRecognition();
-    };
-    recognition.onend = () => {
-        isRecognizing = false;
-        voiceButton.classList.remove('active');
-        setVoiceStatus('Press mic to speak');
-    };
-    recognition.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const result = event.results[i];
-            if (result.isFinal) {
-                finalTranscript += result[0].transcript;
-            } else {
-                interimTranscript += result[0].transcript;
+        recognition.onstart = () => {
+            console.log('Recognition started');
+            isRecognizing = true;
+            voiceButton.classList.add('active');
+            voiceButton.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+            setVoiceStatus('Listening... Speak now');
+        };
+        
+        recognition.onerror = (e) => {
+            console.error('Voice error:', e.error);
+            isRecognizing = false;
+            voiceButton.classList.remove('active');
+            voiceButton.style.backgroundColor = '';
+            
+            let errorMsg = 'Voice error. Try again.';
+            switch(e.error) {
+                case 'no-speech':
+                    errorMsg = 'No speech detected. Try again.';
+                    break;
+                case 'audio-capture':
+                    errorMsg = 'No microphone found. Check permissions.';
+                    break;
+                case 'not-allowed':
+                    errorMsg = 'Microphone access denied. Enable in settings.';
+                    break;
+                case 'network':
+                    errorMsg = 'Network error. Check connection.';
+                    break;
             }
-        }
-        const text = (finalTranscript || interimTranscript).trim();
-        messageInput.value = text;
-        if (finalTranscript && finalTranscript.trim().length > 0) {
-            // Auto-send when final result available
-            sendMessage();
-        }
-    };
+            setVoiceStatus(errorMsg);
+        };
+        
+        recognition.onend = () => {
+            console.log('Recognition ended');
+            isRecognizing = false;
+            voiceButton.classList.remove('active');
+            voiceButton.style.backgroundColor = '';
+            setVoiceStatus('Press mic to speak');
+        };
+        
+        recognition.onresult = (event) => {
+            console.log('Recognition result received');
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const result = event.results[i];
+                if (result.isFinal) {
+                    finalTranscript += result[0].transcript;
+                } else {
+                    interimTranscript += result[0].transcript;
+                }
+            }
+            
+            const text = (finalTranscript || interimTranscript).trim();
+            console.log('Recognized text:', text);
+            
+            if (text) {
+                messageInput.value = text;
+                messageInput.dispatchEvent(new Event('input'));
+            }
+            
+            if (finalTranscript && finalTranscript.trim().length > 0) {
+                console.log('Auto-sending message');
+                setVoiceStatus('Sending message...');
+                setTimeout(() => sendMessage(), 500);
+            }
+        };
+        
+        console.log('Voice recognition setup complete');
+    } catch (error) {
+        console.error('Error setting up voice recognition:', error);
+        if (voiceButton) voiceButton.style.display = 'none';
+    }
 }
 
 function updateRecognitionLang() {
     if (!recognition) return;
     const langMap = {
-        en: 'en-IN',
+        en: 'en-US',
         hi: 'hi-IN',
         mr: 'mr-IN',
         bn: 'bn-IN',
         ta: 'ta-IN',
         te: 'te-IN',
-        gu: 'gu-IN'
+        gu: 'gu-IN',
+        kn: 'kn-IN',
+        ml: 'ml-IN',
+        pa: 'pa-IN',
+        or: 'or-IN',
+        as: 'as-IN',
+        ur: 'ur-IN',
+        es: 'es-ES',
+        fr: 'fr-FR',
+        de: 'de-DE',
+        pt: 'pt-PT',
+        zh: 'zh-CN',
+        ja: 'ja-JP',
+        ar: 'ar-SA'
     };
-    recognition.lang = langMap[currentLanguage] || 'en-IN';
+    recognition.lang = langMap[currentLanguage] || 'en-US';
+    console.log('Recognition language set to:', recognition.lang);
 }
 
 function toggleVoiceInput() {
+    console.log('Toggle voice input clicked');
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
     if (!SpeechRecognition) {
         setVoiceStatus('Voice not supported in this browser.');
+        alert('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.');
         return;
     }
-    if (!recognition) setupVoiceSupport();
+    
+    if (!recognition) {
+        console.log('Setting up voice support...');
+        setupVoiceSupport();
+    }
+    
+    if (!recognition) {
+        setVoiceStatus('Voice setup failed.');
+        return;
+    }
+    
     updateRecognitionLang();
+    
     if (isRecognizing) {
+        console.log('Stopping recognition');
         stopRecognition();
     } else {
+        console.log('Starting recognition');
         try {
             recognition.start();
+            setVoiceStatus('Starting microphone...');
         } catch (e) {
-            // Ignore errors if already started
+            console.error('Error starting recognition:', e);
+            if (e.name === 'InvalidStateError') {
+                // Already started, stop and restart
+                stopRecognition();
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                    } catch (err) {
+                        console.error('Restart failed:', err);
+                        setVoiceStatus('Error starting microphone.');
+                    }
+                }, 100);
+            } else {
+                setVoiceStatus('Error starting microphone.');
+            }
         }
     }
 }
 
 function stopRecognition() {
     if (recognition && isRecognizing) {
-        try { recognition.stop(); } catch (_) {}
+        try { 
+            recognition.stop(); 
+            console.log('Recognition stopped');
+        } catch (e) {
+            console.error('Error stopping recognition:', e);
+        }
         isRecognizing = false;
         voiceButton.classList.remove('active');
+        voiceButton.style.backgroundColor = '';
     }
 }
 
 function setVoiceStatus(text) {
-    if (voiceStatus) voiceStatus.textContent = `Press Enter to send • ${text}`;
+    if (voiceStatus) {
+        voiceStatus.textContent = text;
+        console.log('Voice status:', text);
+    }
 }
 
 // Send message
@@ -175,6 +305,9 @@ async function sendMessage() {
     const typingId = addTypingIndicator();
     
     try {
+        // Get username from localStorage
+        const username = localStorage.getItem('ecoUsername');
+        
         const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {
@@ -183,7 +316,8 @@ async function sendMessage() {
             body: JSON.stringify({
                 message: message,
                 language: currentLanguage,
-                session_id: sessionId
+                session_id: sessionId,
+                username: username
             })
         });
         
@@ -193,8 +327,9 @@ async function sendMessage() {
         
         const data = await response.json();
         
-        // Update session ID
+        // Update session ID and persist in localStorage for memory across page reloads
         sessionId = data.session_id;
+        localStorage.setItem('ecoSessionId', sessionId);
         
         // Remove typing indicator
         removeTypingIndicator(typingId);
@@ -246,9 +381,28 @@ function addBotMessage(text) {
         <div class="message-content">
             ${formattedText}
         </div>
+        <div class="message-actions">
+            <button class="speak-btn" title="Speak this response">🔊 Speak</button>
+        </div>
     `;
     chatMessages.appendChild(messageDiv);
     scrollToBottom();
+
+    // Attach per-message speak handler if supported
+    const speakBtn = messageDiv.querySelector('.speak-btn');
+    if (speakBtn && ('speechSynthesis' in window)) {
+        speakBtn.addEventListener('click', () => {
+            speakText(stripHtml(formattedText));
+        });
+    } else if (speakBtn) {
+        // Hide button if TTS not supported
+        speakBtn.style.display = 'none';
+    }
+
+    // Auto-speak when global toggle is enabled
+    if (ttsEnabled && ('speechSynthesis' in window)) {
+        speakText(stripHtml(formattedText));
+    }
 }
 
 // Format bot message (simple markdown-like formatting)
@@ -344,10 +498,173 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+function stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+}
+
+function setupTTSVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const loadVoices = () => {
+        availableVoices = window.speechSynthesis.getVoices();
+    };
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
+}
+
+function getVoiceForLanguage(langCode) {
+    if (!availableVoices || availableVoices.length === 0) return null;
+    const prefer = {
+        en: ['en-IN','en-GB','en-US'],
+        hi: ['hi-IN'],
+        mr: ['mr-IN'],
+        bn: ['bn-IN'],
+        ta: ['ta-IN'],
+        te: ['te-IN'],
+        gu: ['gu-IN']
+    }[langCode] || ['en-IN','en-GB','en-US'];
+    for (const pref of prefer) {
+        const match = availableVoices.find(v => v.lang === pref);
+        if (match) return match;
+    }
+    // Fallback same language family
+    const family = langCode.split('-')[0];
+    const any = availableVoices.find(v => v.lang && v.lang.startsWith(family));
+    return any || availableVoices[0];
+}
+
+function speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    // Map current language to voice
+    const voice = getVoiceForLanguage(currentLanguage);
+    if (voice) utter.voice = voice;
+    // Adjust rate for clarity
+    utter.rate = 1.0;
+    utter.pitch = 1.0;
+    try {
+        window.speechSynthesis.cancel(); // cancel any ongoing
+        window.speechSynthesis.speak(utter);
+    } catch (e) {
+        console.warn('TTS speak error:', e);
+    }
+}
+
 // Send quick message (from sidebar chips)
 function sendQuickMessage(message) {
     messageInput.value = message;
     sendMessage();
+}
+
+// Clear chat history and start fresh
+function clearChatHistory() {
+    if (confirm('Are you sure you want to clear all chat history? This cannot be undone.')) {
+        // Remove session ID from localStorage
+        localStorage.removeItem('ecoSessionId');
+        sessionId = null;
+        
+        // Clear chat messages UI
+        chatMessages.innerHTML = `
+            <div class="message bot-message">
+                <div class="message-content">
+                    <p>👋 Chat history cleared! Starting fresh conversation.</p>
+                    <p>How can I help you today?</p>
+                </div>
+            </div>
+        `;
+        
+        // Reset quiz mode
+        isQuizMode = false;
+        if (quizStatus) {
+            quizStatus.style.display = 'none';
+        }
+        
+        alert('✅ Chat history cleared successfully!');
+    }
+}
+
+// Toggle history view modal
+function toggleHistoryView() {
+    const modal = document.getElementById('historyModal');
+    if (modal.style.display === 'none' || !modal.style.display) {
+        modal.style.display = 'flex';
+        loadChatHistory();
+    } else {
+        modal.style.display = 'none';
+    }
+}
+
+// Load and display chat history
+async function loadChatHistory() {
+    const historyContent = document.getElementById('historyContent');
+    historyContent.innerHTML = '<div class="loading">Loading chat history...</div>';
+    
+    try {
+        const username = localStorage.getItem('ecoUsername');
+        const url = username 
+            ? `/api/chat/history?username=${encodeURIComponent(username)}`
+            : `/api/chat/history`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to load history');
+        
+        const data = await response.json();
+        
+        if (data.sessions && data.sessions.length > 0) {
+            let html = '';
+            
+            data.sessions.forEach(session => {
+                const date = new Date(session.date);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                
+                html += `
+                    <div class="history-session">
+                        <div class="history-session-header">
+                            <span class="history-session-date">📅 ${dateStr}</span>
+                            <span class="history-session-meta">
+                                ${session.message_count || 0} messages • ${session.language}
+                            </span>
+                        </div>
+                `;
+                
+                if (session.messages && session.messages.length > 0) {
+                    session.messages.forEach(msg => {
+                        const msgClass = msg.sender === 'user' ? 'user' : 'bot';
+                        const sender = msg.sender === 'user' ? '👤 You' : '🤖 EcoMitra';
+                        
+                        html += `
+                            <div class="history-message ${msgClass}">
+                                <div class="history-message-sender">${sender}</div>
+                                <div class="history-message-text">${escapeHtml(msg.message)}</div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += `</div>`;
+            });
+            
+            historyContent.innerHTML = html;
+        } else {
+            historyContent.innerHTML = `
+                <div class="history-empty">
+                    <p>📭 No chat history found</p>
+                    <p style="color: #9ca3af; margin-top: 0.5rem;">Start a conversation to see your history here</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+        historyContent.innerHTML = `
+            <div class="history-empty">
+                <p>❌ Error loading chat history</p>
+                <p style="color: #9ca3af; margin-top: 0.5rem;">Please try again later</p>
+            </div>
+        `;
+    }
 }
 
 // Initialize on page load

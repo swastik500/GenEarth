@@ -24,3 +24,8 @@ sqlmodel==0.0.14
 python-dotenv==1.0.0
 pydantic==2.5.3
 pydantic-settings==2.1.0
+
+# Local ML for waste classification (optional but recommended)
+tensorflow==2.15.0
+pillow==10.2.0
+numpy==1.26.3

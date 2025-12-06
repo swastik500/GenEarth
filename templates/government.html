@@ -1,0 +1,500 @@
+{% extends "base.html" %} {% block title %}Government Schemes - EcoMitra{%
+endblock %} {% block content %}
+
+<!-- 3D Earth Background Canvas -->
+<canvas
+  id="earthCanvas"
+  style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.3;
+  "
+></canvas>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+  // 3D Earth Background
+  const canvas = document.getElementById("earthCanvas");
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+  );
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  // Create Earth sphere
+  const geometry = new THREE.SphereGeometry(5, 32, 32);
+  const material = new THREE.MeshPhongMaterial({
+    color: 0x22c55e,
+    wireframe: false,
+    transparent: true,
+    opacity: 0.3,
+  });
+  const earth = new THREE.Mesh(geometry, material);
+  scene.add(earth);
+
+  // Add wireframe overlay
+  const wireframeGeometry = new THREE.SphereGeometry(5.1, 16, 16);
+  const wireframeMaterial = new THREE.MeshBasicMaterial({
+    color: 0x16a34a,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.2,
+  });
+  const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
+  scene.add(wireframe);
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  directionalLight.position.set(5, 3, 5);
+  scene.add(directionalLight);
+
+  camera.position.z = 15;
+
+  // Animation
+  function animate() {
+    requestAnimationFrame(animate);
+    earth.rotation.y += 0.002;
+    wireframe.rotation.y += 0.001;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Handle resize
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+
+<style>
+  /* Force dark theme for Government page */
+  body {
+    background: #0a1810 !important;
+  }
+
+  .container {
+    max-width: 1200px !important;
+  }
+
+  .ngos-container {
+    background: transparent !important;
+    position: relative;
+    z-index: 1;
+    padding: 2rem 0;
+    min-height: 100vh;
+  }
+
+  .page-header h1 {
+    background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+
+  .page-header p {
+    color: #a1a1aa !important;
+  }
+
+  .filters-section {
+    background: rgba(26, 26, 26, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.2) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .filters-section h2 {
+    color: #22c55e !important;
+  }
+
+  .filter-group label {
+    color: #e4e4e7 !important;
+  }
+
+  .filter-select,
+  .filter-input {
+    background: rgba(26, 26, 26, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #e4e4e7 !important;
+  }
+
+  .filter-select:focus,
+  .filter-input:focus {
+    outline: none;
+    border-color: #22c55e !important;
+  }
+
+  .filter-select option {
+    background: #1a1a1a;
+    color: #e4e4e7;
+  }
+
+  .filter-input::placeholder {
+    color: #71717a;
+  }
+
+  .apply-button {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    color: #000 !important;
+  }
+
+  .apply-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4) !important;
+  }
+
+  .clear-button {
+    background: rgba(113, 113, 122, 0.3) !important;
+    color: #e4e4e7 !important;
+    border: 1px solid rgba(113, 113, 122, 0.5) !important;
+  }
+
+  .clear-button:hover {
+    background: rgba(113, 113, 122, 0.5) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  .results-header h2 {
+    color: #e4e4e7 !important;
+  }
+
+  .count-badge {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    color: #000 !important;
+  }
+
+  .ngos-grid,
+  .schemes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .ngo-card,
+  .scheme-card {
+    background: rgba(26, 26, 26, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .ngo-card:hover,
+  .scheme-card:hover {
+    border-color: #22c55e !important;
+    box-shadow: 0 8px 24px rgba(34, 197, 94, 0.2) !important;
+  }
+
+  .ngo-header h3,
+  .scheme-header h3 {
+    color: #22c55e !important;
+  }
+
+  .category-badge,
+  .level-badge {
+    background: rgba(34, 197, 94, 0.2) !important;
+    color: #22c55e !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+  }
+
+  .ngo-location,
+  .scheme-location {
+    color: #a1a1aa !important;
+  }
+
+  .ngo-description,
+  .scheme-description,
+  .scheme-summary {
+    color: #e4e4e7 !important;
+  }
+
+  .ngo-contact,
+  .scheme-details {
+    border-top: 1px solid rgba(34, 197, 94, 0.2) !important;
+  }
+
+  .contact-item,
+  .detail-item {
+    color: #a1a1aa !important;
+  }
+
+  .contact-item a,
+  .detail-item a {
+    color: #22c55e !important;
+  }
+
+  .contact-item a:hover,
+  .detail-item a:hover {
+    color: #86efac !important;
+  }
+
+  .help-card {
+    background: rgba(26, 26, 26, 0.8) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+    color: #e4e4e7 !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .help-card h3 {
+    background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+  }
+
+  .help-link {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    color: #000 !important;
+  }
+
+  .help-link:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4) !important;
+  }
+
+  .loading,
+  .no-results,
+  .error {
+    color: #a1a1aa !important;
+  }
+
+  .filter-input {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+</style>
+
+<div class="ngos-container">
+  <div class="container">
+    <div class="page-header">
+      <h1>🏛️ Government Schemes</h1>
+      <p>
+        Explore national and state programs: solar subsidies, electric vehicle
+        incentives, waste management schemes, and more.
+      </p>
+    </div>
+
+    <div class="filters-section">
+      <h2>🔍 Filter Schemes</h2>
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label for="levelFilter">Level:</label>
+          <select id="levelFilter" class="filter-select">
+            <option value="">All Levels</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="stateFilter">State:</label>
+          <select id="stateFilter" class="filter-select">
+            <option value="">All States</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="categoryFilter">Category:</label>
+          <select id="categoryFilter" class="filter-select">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="searchInput">Search:</label>
+          <input
+            id="searchInput"
+            class="filter-input"
+            type="text"
+            placeholder="Search name, summary, eligibility"
+          />
+        </div>
+        <div class="filter-group">
+          <button id="applyFilters" class="apply-button">Apply Filters</button>
+          <button id="clearFilters" class="clear-button">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-section">
+      <div class="results-header">
+        <h2>Results</h2>
+        <span id="resultsCount" class="count-badge">Loading...</span>
+      </div>
+      <div id="schemesList" class="ngos-grid">
+        <div class="loading">Loading schemes...</div>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-card">
+        <h3>💡 Need Help Choosing?</h3>
+        <p>
+          You can ask our AI chatbot to recommend relevant schemes based on your
+          needs.
+        </p>
+        <a href="/chat" class="help-link">Go to Chat →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allLevels = [];
+  let allStates = [];
+  let allCategories = [];
+
+  async function loadFilterOptions() {
+    try {
+      const [levelsRes, statesRes, categoriesRes] = await Promise.all([
+        fetch("/api/government/levels"),
+        fetch("/api/government/states"),
+        fetch("/api/government/categories"),
+      ]);
+
+      const levelsData = await levelsRes.json();
+      const statesData = await statesRes.json();
+      const categoriesData = await categoriesRes.json();
+
+      allLevels = levelsData.levels || [];
+      allStates = statesData.states || [];
+      allCategories = categoriesData.categories || [];
+
+      populateFilters();
+    } catch (e) {
+      console.error("Error loading filter options:", e);
+    }
+  }
+
+  function populateFilters() {
+    const levelSelect = document.getElementById("levelFilter");
+    const stateSelect = document.getElementById("stateFilter");
+    const categorySelect = document.getElementById("categoryFilter");
+
+    allLevels.forEach((level) => {
+      const opt = document.createElement("option");
+      opt.value = level;
+      opt.textContent = level;
+      levelSelect.appendChild(opt);
+    });
+
+    allStates.forEach((state) => {
+      const opt = document.createElement("option");
+      opt.value = state;
+      opt.textContent = state;
+      stateSelect.appendChild(opt);
+    });
+
+    allCategories.forEach((cat) => {
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      categorySelect.appendChild(opt);
+    });
+  }
+
+  async function loadSchemes(filters = {}) {
+    const list = document.getElementById("schemesList");
+    list.innerHTML = '<div class="loading">Loading...</div>';
+
+    try {
+      const params = new URLSearchParams();
+      if (filters.level) params.append("level", filters.level);
+      if (filters.state) params.append("state", filters.state);
+      if (filters.category) params.append("category", filters.category);
+      if (filters.search) params.append("search", filters.search);
+
+      const res = await fetch(`/api/government/schemes?${params.toString()}`);
+      const schemes = await res.json();
+
+      document.getElementById(
+        "resultsCount"
+      ).textContent = `${schemes.length} Schemes`;
+
+      if (schemes.length === 0) {
+        list.innerHTML = `
+          <div class="no-results">
+            <p>😔 No schemes found for selected filters.</p>
+            <p>Try adjusting your criteria.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = schemes.map((s) => renderSchemeCard(s)).join("");
+    } catch (e) {
+      console.error("Error loading schemes:", e);
+      list.innerHTML =
+        '<div class="error">Error loading schemes. Please try again.</div>';
+    }
+  }
+
+  function renderSchemeCard(s) {
+    const level = s.state === "National" ? "National" : "State";
+    const siteLink = s.official_url
+      ? `<a href="${s.official_url}" target="_blank">Official Site</a>`
+      : "";
+    return `
+      <div class="ngo-card">
+        <div class="ngo-header">
+          <h3>🏛️ ${escapeHtml(s.name)}</h3>
+          <span class="category-badge">${escapeHtml(s.category)}</span>
+        </div>
+        <div class="ngo-body">
+          <p class="ngo-location">📍 ${escapeHtml(s.state)} • ${level}</p>
+          <p class="ngo-description">${escapeHtml(s.summary)}</p>
+          <details>
+            <summary>Eligibility & How to Apply</summary>
+            <p><strong>Eligibility:</strong> ${formatText(s.eligibility)}</p>
+            <p><strong>How to Apply:</strong> ${formatText(s.how_to_apply)}</p>
+            ${siteLink ? `<p>🌐 ${siteLink}</p>` : ""}
+          </details>
+        </div>
+      </div>
+    `;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text ?? "";
+    return div.innerHTML;
+  }
+
+  function formatText(text) {
+    if (!text) return "";
+    const safe = escapeHtml(text);
+    return safe.replace(/\n/g, "<br />");
+  }
+
+  document.getElementById("applyFilters").addEventListener("click", () => {
+    const filters = {
+      level: document.getElementById("levelFilter").value,
+      state: document.getElementById("stateFilter").value,
+      category: document.getElementById("categoryFilter").value,
+      search: document.getElementById("searchInput").value.trim(),
+    };
+    loadSchemes(filters);
+  });
+
+  document.getElementById("clearFilters").addEventListener("click", () => {
+    document.getElementById("levelFilter").value = "";
+    document.getElementById("stateFilter").value = "";
+    document.getElementById("categoryFilter").value = "";
+    document.getElementById("searchInput").value = "";
+    loadSchemes();
+  });
+
+  loadFilterOptions();
+  loadSchemes();
+</script>
+{% endblock %}

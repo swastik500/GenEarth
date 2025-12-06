@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+CHROMA_MEMORY_DIR = os.getenv("CHROMA_MEMORY_DIR", "./chroma_memory")
 DATA_DIR = "./data"
 
 
@@ -128,3 +129,20 @@ How to Apply: {scheme_data['how_to_apply']}
     vector_store = get_vector_store()
     vector_store.add_documents([doc])
     print(f"✅ Added scheme '{scheme_data['name']}' to vector store")
+
+
+def get_chat_memory_store():
+    """Get or create ChromaDB vector store for chat memory/learning"""
+    persist_dir = Path(CHROMA_MEMORY_DIR)
+    persist_dir.mkdir(exist_ok=True)
+    
+    embeddings = get_embeddings()
+    
+    # Load or create memory store
+    memory_store = Chroma(
+        persist_directory=str(persist_dir),
+        embedding_function=embeddings,
+        collection_name="chat_memory"
+    )
+    
+    return memory_store

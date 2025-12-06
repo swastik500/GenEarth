@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.database import engine, SessionLocal
-from backend.models import Base, NGO, GovernmentScheme
+from backend.models import Base, NGO, GovernmentScheme, User
 from backend.ai.knowledge_loader import initialize_vector_store, add_scheme_to_vector_store
 
 
@@ -132,6 +132,50 @@ def seed_ngos(db):
     
     db.commit()
     print(f"✅ Added {len(ngos_data)} NGOs")
+
+
+def seed_users(db):
+    """Seed sample users for gamification leaderboard"""
+    print("🌱 Seeding sample users for gamification...")
+    
+    from datetime import datetime, timedelta
+    import random
+    
+    sample_users = [
+        {"username": "eco_warrior", "email": "warrior@ecomitra.com", "ecoscore": 250},
+        {"username": "green_hero", "email": "hero@ecomitra.com", "ecoscore": 180},
+        {"username": "planet_saver", "email": "saver@ecomitra.com", "ecoscore": 150},
+        {"username": "earth_friend", "email": "friend@ecomitra.com", "ecoscore": 120},
+        {"username": "nature_lover", "email": "lover@ecomitra.com", "ecoscore": 100},
+        {"username": "eco_champion", "email": "champion@ecomitra.com", "ecoscore": 85},
+        {"username": "green_thumb", "email": "thumb@ecomitra.com", "ecoscore": 70},
+        {"username": "recycler_pro", "email": "pro@ecomitra.com", "ecoscore": 55},
+        {"username": "solar_fan", "email": "solar@ecomitra.com", "ecoscore": 40},
+        {"username": "water_saver", "email": "water@ecomitra.com", "ecoscore": 25},
+    ]
+    
+    for user_data in sample_users:
+        user = User(
+            username=user_data["username"],
+            email=user_data["email"],
+            ecoscore=user_data["ecoscore"],
+            current_streak=random.randint(0, 7),
+            longest_streak=random.randint(3, 15),
+            last_active_date=datetime.utcnow() - timedelta(days=random.randint(0, 3)),
+            badges=random.sample(
+                ["waste_warrior", "energy_saver", "scheme_explorer", "ngo_connector"],
+                k=random.randint(1, 3)
+            ),
+            quiz_completed=random.randint(0, 5),
+            images_analyzed=random.randint(2, 10),
+            chat_questions=random.randint(5, 20),
+            ngos_viewed=random.randint(1, 8),
+            schemes_viewed=random.randint(1, 8)
+        )
+        db.add(user)
+    
+    db.commit()
+    print(f"✅ {len(sample_users)} sample users added")
 
 
 def seed_schemes(db):
@@ -256,17 +300,20 @@ def main():
         # Check if already seeded
         existing_ngos = db.query(NGO).count()
         existing_schemes = db.query(GovernmentScheme).count()
+        existing_users = db.query(User).count()
         
         if existing_ngos > 0 or existing_schemes > 0:
             print(f"\n⚠️ Database already contains data:")
             print(f"   - NGOs: {existing_ngos}")
             print(f"   - Schemes: {existing_schemes}")
+            print(f"   - Users: {existing_users}")
             response = input("\nDo you want to reset and reseed? (yes/no): ")
             
             if response.lower() in ['yes', 'y']:
                 print("\n🔄 Clearing existing data...")
                 db.query(NGO).delete()
                 db.query(GovernmentScheme).delete()
+                db.query(User).delete()
                 db.commit()
             else:
                 print("\n✅ Keeping existing data")
@@ -283,6 +330,7 @@ def main():
         # Seed data
         seed_ngos(db)
         seed_schemes(db)
+        seed_users(db)
         
     finally:
         db.close()

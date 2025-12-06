@@ -1,9 +1,12 @@
 from langchain_classic.chains import ConversationalRetrievalChain
 from langchain_core.prompts import PromptTemplate
 from langchain_classic.memory import ConversationBufferMemory
+from langchain_community.chat_message_histories import SQLChatMessageHistory
+from langchain_core.messages import HumanMessage, AIMessage
+import os
 
 from backend.ai.gemini_setup import get_gemini_llm
-from backend.ai.knowledge_loader import get_vector_store
+from backend.ai.knowledge_loader import get_vector_store, get_chat_memory_store
 
 
 
@@ -76,8 +79,8 @@ def get_system_prompt(language: str = "en") -> str:
     return SYSTEM_PROMPTS.get(language, SYSTEM_PROMPTS["en"])
 
 
-def create_rag_chain(language: str = "en"):
-    """Create RAG chain with conversational memory"""
+def create_rag_chain(language: str = "en", session_id: str = None):
+    """Create RAG chain with persistent conversational memory using ChromaDB"""
     
     # Get components
     llm = get_gemini_llm(temperature=0.7)
@@ -95,7 +98,7 @@ def create_rag_chain(language: str = "en"):
 Context from knowledge base:
 {{context}}
 
-Chat History:
+Previous Conversations (learning from past interactions):
 {{chat_history}}
 
 User Question: {{question}}
@@ -107,12 +110,35 @@ Response (in language: {language}):"""
         input_variables=["context", "chat_history", "question"]
     )
     
-    # Create memory
-    memory = ConversationBufferMemory(
-        memory_key="chat_history",
-        return_messages=True,
-        output_key="answer"
-    )
+    # Create persistent memory using SQLite for chat history
+    if session_id:
+        # Use SQLite-based chat message history for persistence
+        db_path = os.path.join("data", "chat_memory.db")
+        os.makedirs("data", exist_ok=True)
+        
+        # Create connection string for SQLite
+        connection_string = f"sqlite:///{db_path}"
+        
+        # Create message history with session ID
+        message_history = SQLChatMessageHistory(
+            session_id=session_id,
+            connection_string=connection_string
+        )
+        
+        # Create memory from message history
+        memory = ConversationBufferMemory(
+            chat_memory=message_history,
+            memory_key="chat_history",
+            return_messages=True,
+            output_key="answer"
+        )
+    else:
+        # Fallback to in-memory buffer
+        memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True,
+            output_key="answer"
+        )
     
     # Create chain
     chain = ConversationalRetrievalChain.from_llm(
@@ -127,11 +153,31 @@ Response (in language: {language}):"""
     return chain
 
 
-def get_rag_response(question: str, language: str = "en") -> dict:
-    """Get response from RAG chain"""
+def get_rag_response(question: str, language: str = "en", session_id: str = None, username: str = None) -> dict:
+    """Get response from RAG chain with persistent memory"""
     try:
-        chain = create_rag_chain(language)
+        # Use username as session_id for persistent learning per user
+        persistent_session_id = username if username else session_id
+        
+        chain = create_rag_chain(language, session_id=persistent_session_id)
         result = chain({"question": question})
+        
+        # Also store in ChromaDB for long-term learning
+        if persistent_session_id:
+            try:
+                memory_store = get_chat_memory_store()
+                # Store conversation as documents for future retrieval
+                memory_store.add_texts(
+                    texts=[f"User ({username or 'anonymous'}): {question}\nAssistant: {result['answer']}"],
+                    metadatas=[{
+                        "type": "conversation",
+                        "username": username or "anonymous",
+                        "language": language,
+                        "session_id": persistent_session_id
+                    }]
+                )
+            except Exception as mem_error:
+                print(f"Error storing in memory: {str(mem_error)}")
         
         return {
             "answer": result["answer"],
@@ -139,6 +185,8 @@ def get_rag_response(question: str, language: str = "en") -> dict:
         }
     except Exception as e:
         print(f"Error in RAG chain: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {
             "answer": "I apologize, but I encountered an error processing your question. Please try again.",
             "sources": []

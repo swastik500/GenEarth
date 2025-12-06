@@ -1,0 +1,188 @@
+{% extends "base.html" %} {% block title %}Image-based Waste Analysis -
+EcoMitra{% endblock %} {% block content %}
+<div class="ngos-container">
+  <div class="container">
+    <div class="page-header">
+      <h1>🖼️ Image-based Waste Analysis</h1>
+      <p>
+        Upload a photo of waste or dustbin contents. EcoMitra will identify
+        waste types and suggest safe disposal.
+      </p>
+    </div>
+
+    <div class="filters-section">
+      <h2>📤 Upload Image</h2>
+      <div class="filters-grid">
+        <div class="filter-group">
+          <input type="file" id="imageInput" accept="image/*" />
+        </div>
+        <div class="filter-group">
+          <input
+            type="text"
+            id="notesInput"
+            class="filter-input"
+            placeholder="Optional notes (e.g., location, context)"
+          />
+        </div>
+        <div class="filter-group">
+          <button id="analyzeBtn" class="apply-button">Analyze</button>
+          <button id="clearBtn" class="clear-button">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-section">
+      <div class="results-header">
+        <h2>Results</h2>
+        <span id="resultsStatus" class="count-badge">Waiting for upload…</span>
+      </div>
+      <div class="preview" id="preview"></div>
+      <div id="analysisResults" class="ngos-grid"></div>
+    </div>
+
+    <div class="help-section">
+      <div class="help-card">
+        <h3>💡 Tips</h3>
+        <p>
+          Use clear, well-lit images. Avoid motion blur. For e-waste, include
+          visible labels or parts.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const imageInput = document.getElementById("imageInput");
+  const notesInput = document.getElementById("notesInput");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const preview = document.getElementById("preview");
+  const statusEl = document.getElementById("resultsStatus");
+  const resultsEl = document.getElementById("analysisResults");
+
+  let currentFile = null;
+
+  imageInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.innerHTML = `<img src="${reader.result}" alt="Preview" style="max-width: 320px; border-radius: 8px;" />`;
+      statusEl.textContent = "Image ready";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  analyzeBtn.addEventListener("click", async () => {
+    if (!currentFile) {
+      alert("Please select an image first.");
+      return;
+    }
+    statusEl.textContent = "Analyzing…";
+    resultsEl.innerHTML =
+      '<div class="loading">Analyzing image, please wait…</div>';
+    try {
+      // Get username from localStorage
+      const username = localStorage.getItem("ecoUsername");
+
+      const form = new FormData();
+      form.append("file", currentFile);
+      form.append("notes", notesInput.value.trim());
+      if (username) {
+        form.append("username", username);
+      }
+
+      const res = await fetch("/api/vision/analyze", {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Analysis failed");
+      }
+      const data = await res.json();
+      statusEl.textContent = "Analysis complete";
+      renderResults(data);
+    } catch (e) {
+      console.error(e);
+      statusEl.textContent = "Error";
+      resultsEl.innerHTML =
+        '<div class="error">Error analyzing image. Please try again.</div>';
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    imageInput.value = "";
+    notesInput.value = "";
+    preview.innerHTML = "";
+    resultsEl.innerHTML = "";
+    statusEl.textContent = "Waiting for upload…";
+    currentFile = null;
+  });
+
+  function renderResults(d) {
+    const items = (d.probable_items || [])
+      .map((i) => `<li>${escapeHtml(i)}</li>`)
+      .join("");
+
+    const cat = d.categorized_items || {};
+    function renderCat(title, arr) {
+      if (!arr || arr.length === 0) return "";
+      return `<div class="category-block"><h4>${title}</h4><ul>${arr
+        .map((x) => `<li>${escapeHtml(x)}</li>`)
+        .join("")}</ul></div>`;
+    }
+
+    const env = (d.environmental_guidance || [])
+      .map((x) => `<li>${escapeHtml(x)}</li>`)
+      .join("");
+    const doList = (d.do_dont?.do || [])
+      .map((x) => `<li>${escapeHtml(x)}</li>`)
+      .join("");
+    const dontList = (d.do_dont?.dont || [])
+      .map((x) => `<li>${escapeHtml(x)}</li>`)
+      .join("");
+
+    resultsEl.innerHTML = `
+      <div class="ngo-card">
+        <div class="ngo-header">
+          <h3>🧠 Gemini Vision Analysis</h3>
+          <span class="category-badge">Model: ${escapeHtml(
+            d.model || ""
+          )}</span>
+        </div>
+        <div class="ngo-body">
+          <h4>Probable Items</h4>
+          <ul>${items || "<li>No items parsed</li>"}</ul>
+
+          <div class="categories-grid">
+            ${renderCat("Organic / Wet", cat.organic)}
+            ${renderCat("Dry Recyclables", cat.dry_recyclables)}
+            ${renderCat("E-waste", cat.e_waste)}
+            ${renderCat("Hazardous", cat.hazardous)}
+            ${renderCat("Unknown", cat.unknown)}
+          </div>
+
+          <h4>Environmental Impact / Suggestions</h4>
+          <ul>${env || "<li>Not available</li>"}</ul>
+
+          <div class="guidelines">
+            <h4>Do</h4>
+            <ul>${doList || "<li>-</li>"}</ul>
+            <h4>Don’t</h4>
+            <ul>${dontList || "<li>-</li>"}</ul>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text ?? "";
+    return div.innerHTML;
+  }
+</script>
+{% endblock %}

@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 import uuid
 
 from backend.database import get_db
 from backend.models import ChatSession, ChatMessage, NGO, GovernmentScheme
 from backend.ai.chain import get_rag_response, simple_query
 from backend.quiz_data import get_quiz_questions
+from backend.gamification import award_points
 
 router = APIRouter(prefix="/api", tags=["chat"])
 
@@ -16,6 +18,7 @@ class ChatRequest(BaseModel):
     message: str
     language: str = "en"
     session_id: Optional[str] = None
+    username: Optional[str] = None  # Optional username for gamification
 
 
 class ChatResponse(BaseModel):
@@ -151,7 +154,7 @@ def handle_scheme_query(message: str, language: str, db: Session) -> str:
     return response
 
 
-def handle_quiz_mode(session: ChatSession, message: str, language: str, db: Session) -> dict:
+def handle_quiz_mode(session: ChatSession, message: str, language: str, db: Session, username: Optional[str] = None) -> dict:
     """Handle quiz mode interaction"""
     questions = get_quiz_questions(language)
     
@@ -210,6 +213,19 @@ def handle_quiz_mode(session: ChatSession, message: str, language: str, db: Sess
         total = len(questions)
         session.quiz_score = 0
         db.commit()
+        
+        # Award points for quiz completion (only if passed with 60%+)
+        if score >= total * 0.6 and username:
+            try:
+                award_points(
+                    db=db,
+                    username=username,
+                    activity_type="quiz_complete",
+                    metadata={"score": score, "total": total}
+                )
+                feedback += "\n\n🏆 +10 EcoScore points for completing the quiz!\n"
+            except Exception as e:
+                print(f"Gamification error: {str(e)}")
         
         if language == "hi":
             summary = f"{feedback}🎉 क्विज पूरी हुई!\n\n📊 आपका स्कोर: {score}/{total}\n\n"
@@ -297,7 +313,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
         
         # Handle quiz mode
         if session.active_mode == "quiz":
-            result = handle_quiz_mode(session, request.message, request.language, db)
+            result = handle_quiz_mode(session, request.message, request.language, db, request.username)
             
             # Save bot response
             bot_msg = ChatMessage(session_id=session.id, sender="bot", message=result["reply"])
@@ -321,7 +337,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             session.quiz_score = 0
             db.commit()
             
-            result = handle_quiz_mode(session, "", request.language, db)
+            result = handle_quiz_mode(session, "", request.language, db, request.username)
             
             # Save bot response
             bot_msg = ChatMessage(session_id=session.id, sender="bot", message=result["reply"])
@@ -341,15 +357,32 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
         # Handle scheme queries
         elif intent["primary"] == "scheme":
             reply = handle_scheme_query(request.message, request.language, db)
-        # General sustainability query - use RAG
+        # General sustainability query - use RAG with persistent memory
         else:
-            rag_result = get_rag_response(request.message, request.language)
+            rag_result = get_rag_response(
+                request.message, 
+                request.language, 
+                session_id=session.id,
+                username=request.username
+            )
             reply = rag_result["answer"]
         
         # Save bot response
         bot_msg = ChatMessage(session_id=session.id, sender="bot", message=reply)
         db.add(bot_msg)
         db.commit()
+        
+        # Award points for chat question (gamification)
+        if request.username:
+            try:
+                award_points(
+                    db=db,
+                    username=request.username,
+                    activity_type="chat_question",
+                    metadata={"question": request.message[:100]}
+                )
+            except Exception as e:
+                print(f"Gamification error: {str(e)}")
         
         return ChatResponse(
             reply=reply,
@@ -360,3 +393,81 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/chat/history")
+async def get_chat_history(
+    session_id: Optional[str] = None,
+    username: Optional[str] = None,
+    limit: int = 50,
+    db: Session = Depends(get_db)
+):
+    """Get chat history for a session or username"""
+    try:
+        if session_id:
+            # Get specific session history
+            messages = db.query(ChatMessage).filter(
+                ChatMessage.session_id == session_id
+            ).order_by(ChatMessage.created_at.desc()).limit(limit).all()
+            
+            return {
+                "session_id": session_id,
+                "messages": [
+                    {
+                        "sender": msg.sender,
+                        "message": msg.message,
+                        "timestamp": msg.created_at.isoformat()
+                    }
+                    for msg in reversed(messages)
+                ]
+            }
+        elif username:
+            # Get all sessions for username (if we stored username in session)
+            # For now, return recent sessions
+            sessions = db.query(ChatSession).order_by(
+                ChatSession.created_at.desc()
+            ).limit(10).all()
+            
+            history = []
+            for session in sessions:
+                messages = db.query(ChatMessage).filter(
+                    ChatMessage.session_id == session.id
+                ).order_by(ChatMessage.created_at).all()
+                
+                if messages:
+                    history.append({
+                        "session_id": session.id,
+                        "date": session.created_at.isoformat(),
+                        "language": session.language,
+                        "message_count": len(messages),
+                        "messages": [
+                            {
+                                "sender": msg.sender,
+                                "message": msg.message,
+                                "timestamp": msg.created_at.isoformat()
+                            }
+                            for msg in messages
+                        ]
+                    })
+            
+            return {"sessions": history}
+        else:
+            # Return recent sessions
+            sessions = db.query(ChatSession).order_by(
+                ChatSession.created_at.desc()
+            ).limit(10).all()
+            
+            return {
+                "sessions": [
+                    {
+                        "session_id": s.id,
+                        "date": s.created_at.isoformat(),
+                        "language": s.language
+                    }
+                    for s in sessions
+                ]
+            }
+    except Exception as e:
+        print(f"Error fetching chat history: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
